@@ -20,7 +20,7 @@ library(glm)
 library(marginaleffects)
 library(tidyverse)
 
-sample <- read_feather("Data_clean/sample.arrow")
+sample <- read_feather("Samples/sample.arrow")
 
 # 1 Contingency tables ----------------------------------------------------
 

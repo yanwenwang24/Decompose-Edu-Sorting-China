@@ -33,9 +33,9 @@ include("functions.jl")
 
 # Load data
 census = DataFrame(Arrow.Table("Data_clean/census.arrow"))
-sample_women = DataFrame(Arrow.Table("Data_clean/sample_women.arrow"))
-sample_men = DataFrame(Arrow.Table("Data_clean/sample_men.arrow"))
-sample = DataFrame(Arrow.Table("Data_clean/sample.arrow"))
+sample_women = DataFrame(Arrow.Table("Samples/sample_women.arrow"))
+sample_men = DataFrame(Arrow.Table("Samples/sample_men.arrow"))
+sample = DataFrame(Arrow.Table("Samples/sample.arrow"))
 
 # Source scripts
 # @time include("01_sample.jl")

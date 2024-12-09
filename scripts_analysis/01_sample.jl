@@ -53,6 +53,6 @@ sample_men.cohort = categorical(
 
 # 2 Save samples ----------------------------------------------------------
 
-Arrow.write("Data_clean/sample_women.arrow", sample_women)
-Arrow.write("Data_clean/sample_men.arrow", sample_men)
-Arrow.write("Data_clean/sample.arrow", sample)
+Arrow.write("Samples/sample_women.arrow", sample_women)
+Arrow.write("Samples/sample_men.arrow", sample_men)
+Arrow.write("Samples/sample.arrow", sample)

@@ -1,7 +1,7 @@
 ## ------------------------------------------------------------------------
 ##
 ## Script name: 06_decompose.jl
-## Purpose: Decompose differences in educational sorting outcomes
+## Purpose: Prepare data for decomposition analysis
 ## Author: Yanwen Wang
 ## Date Created: 2024-12-09
 ## Email: yanwenwang@u.nus.edu

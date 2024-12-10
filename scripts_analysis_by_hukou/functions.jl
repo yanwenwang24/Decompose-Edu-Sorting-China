@@ -239,18 +239,45 @@ end
 Extract all three components from a single group's data.
 Returns a ComponentSet containing margins, weights, and pattern components.
 """
-function extract_components(df)
-    pairs = get_pairings(df) # Actual pairings
-    f_totals, m_totals = get_margins(df) # Component 1
+function extract_components(df::DataFrame)
+    max_edu = maximum(df.edu_f) - 1
+    full_matrix = zeros(Float64, max_edu + 1, max_edu + 1)
 
-    weights = get_weights(pairs, f_totals, m_totals) # Component 2
-    pattern = get_assort_pattern(pairs) # Component 3
+    # Fill marriage table and margins
+    for row in eachrow(df)
+        if row.edu_f ≤ max_edu && row.edu_m ≤ max_edu
+            full_matrix[row.edu_f, row.edu_m] = row.n
+        elseif row.edu_m == max_edu + 1 && row.edu_f ≤ max_edu
+            full_matrix[row.edu_f, end] = row.n
+        elseif row.edu_f == max_edu + 1 && row.edu_m ≤ max_edu
+            full_matrix[end, row.edu_m] = row.n
+        end
+    end
 
-    ComponentSet(
-        (f_totals, m_totals),
-        weights,
-        pattern
-    )
+    # Standardize components separately
+    marriage_sum = sum(@view full_matrix[1:max_edu, 1:max_edu])
+
+    # Create margins
+    f_totals = full_matrix[1:max_edu, end] ./ sum(full_matrix[1:max_edu, end])
+    m_totals = full_matrix[end, 1:max_edu] ./ sum(full_matrix[end, 1:max_edu])
+    margins = (f_totals, m_totals)
+
+    # Calculate marriage gradients
+    f_married = vec(sum(full_matrix[1:max_edu, 1:max_edu], dims=2))
+    m_married = vec(sum(full_matrix[1:max_edu, 1:max_edu], dims=1))
+    weights = (f_married ./ full_matrix[1:max_edu, end]) .*
+              (m_married ./ full_matrix[end, 1:max_edu])'
+    weights ./= sum(weights)
+
+    # Calculate assortative mating pattern using odds ratios
+    pattern = ones(max_edu, max_edu)
+    marriage_table = full_matrix[1:max_edu, 1:max_edu] ./ marriage_sum
+    for r in 2:max_edu, c in 2:max_edu
+        pattern[r, c] = (marriage_table[r, c] / marriage_table[r, 1]) *
+                        (marriage_table[1, 1] / marriage_table[1, c])
+    end
+
+    return ComponentSet(margins, weights, pattern)
 end
 
 """
@@ -262,102 +289,6 @@ Returns a dictionary mapping group values to their respective ComponentSets.
 function extract_components_by_group(df, group_col::Symbol)
     grouped = groupby(df, group_col)
     return Dict(first(g[!, group_col]) => extract_components(g) for g in grouped)
-end
-
-"""
-    get_pairings(df)
-
-Create matrix of actual educational pairings (edu_f, edu_m from 1-4).
-"""
-function get_pairings(df)
-    max_edu = maximum(df.edu_f) - 1
-    pairs = zeros(Float64, max_edu, max_edu)
-
-    for row in eachrow(df)
-        if row.edu_f ≤ max_edu && row.edu_m ≤ max_edu
-            pairs[row.edu_f, row.edu_m] = row.n
-        end
-    end
-
-    return pairs
-end
-
-"""
-    get_margins(df)
-
-Extract education totals (married + unmarried) from marginal data.
-"""
-function get_margins(df)
-    max_edu = maximum(df.edu_f) - 1
-    f_totals = zeros(Float64, max_edu)
-    m_totals = zeros(Float64, max_edu)
-
-    for row in eachrow(df)
-        if row.edu_m == maximum(df.edu_f) && row.edu_f ≤ max_edu
-            f_totals[row.edu_f] = row.n
-        elseif row.edu_f == maximum(df.edu_f) && row.edu_m ≤ max_edu
-            m_totals[row.edu_m] = row.n
-        end
-    end
-
-    return f_totals, m_totals
-end
-
-"""
-    get_weights(pairs::Matrix{Float64}, f_totals::Vector{Float64}, m_totals::Vector{Float64})
-
-Calculate Component 2: educational gradients in marriage rates.
-"""
-function get_weights(pairs::Matrix{Float64}, f_totals::Vector{Float64}, m_totals::Vector{Float64})
-    weights = zeros(Float64, size(pairs))
-
-    for i in axes(pairs, 1), j in axes(pairs, 2)
-        if f_totals[i] > 0 && m_totals[j] > 0
-            weights[i, j] = pairs[i, j] / (f_totals[i] * m_totals[j])
-        end
-    end
-
-    return weights
-end
-
-"""
-    get_marriage_margins(pairs::Matrix{Float64})
-
-Calculate education totals for married population.
-"""
-function get_marriage_margins(pairs::Matrix{Float64})
-    f_married = vec(sum(pairs, dims=2))
-    m_married = vec(sum(pairs, dims=1))
-    return f_married, m_married
-end
-
-"""
-    get_random_pairs(pairs::Matrix{Float64})
-
-Calculate expected pairing matrix under random sorting.
-"""
-function get_random_pairs(pairs::Matrix{Float64})
-    f_married, m_married = get_marriage_margins(pairs)
-    total_marriages = sum(pairs)
-    return [f_married[i] * m_married[j] / total_marriages for i in axes(pairs, 1), j in axes(pairs, 2)]
-end
-
-"""
-    get_assort_pattern(pairs::Matrix{Float64})
-
-Calculate Component 3: assortative mating pattern.
-"""
-function get_assort_pattern(pairs::Matrix{Float64})
-    random_pairs = get_random_pairs(pairs)
-    pattern = zeros(Float64, size(pairs))
-
-    for i in axes(pairs, 1), j in axes(pairs, 2)
-        if random_pairs[i, j] > 0
-            pattern[i, j] = pairs[i, j] / random_pairs[i, j]
-        end
-    end
-
-    return pattern
 end
 
 """
@@ -494,87 +425,6 @@ function decompose_differences(comp1::ComponentSet, comp2::ComponentSet)
 end
 
 """
-    calculate_group_patterns(df::DataFrame, group_value::String, group_col::Symbol)
-
-Calculate mating patterns directly from the original DataFrame for a specific group.
-"""
-function calculate_group_patterns(df::DataFrame, group_value::String, group_col::Symbol)
-    group_data = filter(row -> row[group_col] == group_value, df)
-    max_edu = maximum(group_data.edu_f) - 1
-
-    matrix = zeros(Float64, max_edu, max_edu)
-    total = 0.0
-
-    for row in eachrow(group_data)
-        if row.edu_f ≤ max_edu && row.edu_m ≤ max_edu
-            matrix[row.edu_f, row.edu_m] = row.n
-            total += row.n
-        end
-    end
-
-    homogamy = sum(matrix[i, i] for i in 1:max_edu) / total
-    hypergamy = sum(matrix[i, j] for i in 1:max_edu, j in 1:max_edu if j > i) / total
-    hypogamy = sum(matrix[i, j] for i in 1:max_edu, j in 1:max_edu if j < i) / total
-
-    return (homogamy=homogamy, hypergamy=hypergamy, hypogamy=hypogamy)
-end
-
-"""
-    verify_decomposition(df::DataFrame, results::NamedTuple, 
-                        group1::String, group2::String, group_col::Symbol)
-
-Verify decomposition results and print a comprehensive report.
-"""
-function verify_decomposition(df::DataFrame, results::NamedTuple,
-    group1::String, group2::String, group_col::Symbol)
-    patterns1 = calculate_group_patterns(df, group1, group_col)
-    patterns2 = calculate_group_patterns(df, group2, group_col)
-
-    println("\nDecomposition Analysis Verification Report")
-    println("==========================================")
-    println("\nComparing groups: $group1 vs $group2")
-
-    for pattern in [:homogamy, :hypergamy, :hypogamy]
-        actual_diff = patterns2[pattern] - patterns1[pattern]
-        decomp = results.contributions[pattern]
-        total_diff = decomp["total"]
-        component_sum = decomp["expansion"] + decomp["gradient"] + decomp["pattern"]
-
-        println("\n$(uppercase(String(pattern)))")
-        println("-"^(length(String(pattern)) + 1))
-
-        # Original values
-        println("Original proportions:")
-        println("  $(group1): $(round(patterns1[pattern] * 100, digits=2))%")
-        println("  $(group2): $(round(patterns2[pattern] * 100, digits=2))%")
-
-        # Differences
-        println("\nDifferences:")
-        println("  Actual: $(round(actual_diff * 100, digits=2))%")
-        println("  Decomposition total: $(round(total_diff * 100, digits=2))%")
-
-        # Components
-        println("\nDecomposition components:")
-        println("  Educational expansion: $(round(decomp["expansion"] * 100, digits=2))%")
-        println("  Educational gradient: $(round(decomp["gradient"] * 100, digits=2))%")
-        println("  Assortative pattern: $(round(decomp["pattern"] * 100, digits=2))%")
-        println("  Sum of components: $(round(component_sum * 100, digits=2))%")
-
-        # Verification
-        total_discrepancy = abs(total_diff - actual_diff)
-        additivity_discrepancy = abs(total_diff - component_sum)
-
-        println("\nVerification:")
-        println("  Total discrepancy: $(round(total_discrepancy * 100, digits=4))%")
-        println("  Additivity discrepancy: $(round(additivity_discrepancy * 100, digits=4))%")
-
-        if total_discrepancy > 1e-10 || additivity_discrepancy > 1e-10
-            println("\n⚠️  Warning: Discrepancies detected above numerical tolerance")
-        end
-    end
-end
-
-"""
     bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::DataFrame;
                           n_bootstrap::Int=1000, seed::Int=42)
 
@@ -624,21 +474,24 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
         bootstrap_results[b] = decompose_differences(boot_comp1, boot_comp2).contributions
     end
 
-    # Calculate bootstrap statistics
+    # Calculate bootstrap statistics with proper handling of invalid results
     results = Dict{Symbol,Dict{String,NamedTuple}}()
 
     for pattern in [:homogamy, :hypergamy, :hypogamy]
         results[pattern] = Dict{String,NamedTuple}()
 
         for component in ["total", "expansion", "gradient", "pattern"]
-            values = [bootstrap_results[b][pattern][component] for b in 1:n_bootstrap]
+            # Get all values and filter out missing or NaN
+            all_values = [bootstrap_results[b][pattern][component] for b in 1:n_bootstrap]
+            valid_values = filter(x -> !ismissing(x) && !isnan(x), all_values)
+
             point_est = point_estimates.contributions[pattern][component]
 
             results[pattern][component] = (
                 estimate=point_est,
-                se=std(values),
-                ci_lower=quantile(values, 0.025),
-                ci_upper=quantile(values, 0.975)
+                se=std(valid_values),
+                ci_lower=quantile(valid_values, 0.025),
+                ci_upper=quantile(valid_values, 0.975)
             )
         end
     end

@@ -577,6 +577,11 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
     # Get point estimates from original data
     point_estimates = decompose_differences(comp1, comp2)
 
+    # Identify the grouping variable and values
+    # We assume the first non-numeric, non-n column is the grouping variable
+    group_col = names(df)[findfirst(col -> col ∉ ["edu_f", "edu_m", "n", "n_unrounded"], names(df))]
+    group_vals = unique(df[:, group_col])
+
     # Remove rows with missing values and prepare for bootstrap
     valid_df = filter(row -> !ismissing(row.n), df)
     n_total = Int(round(sum(valid_df.n)))
@@ -585,15 +590,19 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
     # Storage for bootstrap results
     bootstrap_results = Vector{Dict{Symbol,Dict{String,Float64}}}(undef, n_bootstrap)
 
+    # Get the initial group values that correspond to comp1 and comp2
+    group_val1 = group_vals[1]  # Value for comp1
+    group_val2 = group_vals[end]  # Value for comp2
+
     # Perform bootstrap iterations
     for b in 1:n_bootstrap
         # Generate bootstrap sample
         boot_df = copy(valid_df)
         boot_df.n = rand(Distributions.Multinomial(n_total, probs))
 
-        # Split into groups and create new ComponentSets
-        group1_df = filter(row -> row.cohort == valid_df.cohort[1], boot_df)
-        group2_df = filter(row -> row.cohort == valid_df.cohort[end], boot_df)
+        # Split into groups based on the identified grouping variable
+        group1_df = filter(row -> row[group_col] == group_val1, boot_df)
+        group2_df = filter(row -> row[group_col] == group_val2, boot_df)
 
         boot_comp1 = extract_components(group1_df)
         boot_comp2 = extract_components(group2_df)
@@ -618,23 +627,6 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
                 ci_lower=quantile(values, 0.025),
                 ci_upper=quantile(values, 0.975)
             )
-        end
-    end
-
-    # Print comprehensive report
-    println("\nDecomposition Analysis with Bootstrap Standard Errors")
-    println("================================================")
-
-    for pattern in [:homogamy, :hypergamy, :hypogamy]
-        println("\n$(uppercase(String(pattern)))")
-        println("-"^(length(String(pattern)) + 1))
-
-        for component in ["total", "expansion", "gradient", "pattern"]
-            r = results[pattern][component]
-            println("\n$component:")
-            println("  Estimate: $(round(r.estimate * 100, digits=2))%")
-            println("  Std. Error: $(round(r.se * 100, digits=2))%")
-            println("  95% CI: [$(round(r.ci_lower * 100, digits=2))%, $(round(r.ci_upper * 100, digits=2))%]")
         end
     end
 

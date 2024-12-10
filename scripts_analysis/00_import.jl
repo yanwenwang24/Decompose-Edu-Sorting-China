@@ -19,11 +19,13 @@ using CairoMakie
 using CategoricalArrays
 using DataFrames
 using DataFramesMeta
+using Distributions
 using FreqTables
-using GLM
+using LinearAlgebra
 using MakieThemes
 using ProportionalFitting
 using Random
+using Statistics
 using StatsBase
 
 set_theme!(theme_ggthemr(:fresh))
@@ -43,3 +45,4 @@ sample = DataFrame(Arrow.Table("Samples/sample.arrow"))
 @time include("03_composition.jl")
 @time include("04_gradient.jl")
 @time include("06_decomp_prepare.jl")
+@time include("07_decomp.jl")

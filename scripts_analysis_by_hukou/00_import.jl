@@ -25,8 +25,6 @@ using Random
 using Statistics
 using StatsBase
 
-set_theme!(theme_ggthemr(:fresh))
-
 # Load functions
 include("functions.jl")
 

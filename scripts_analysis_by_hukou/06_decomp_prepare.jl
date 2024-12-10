@@ -180,7 +180,7 @@ count_df = @chain sample_urban begin
 end
 
 leftjoin!(df, count_df, on=["cohort", "edu_f", "edu_m"])
-sort(df, [:cohort, :edu_f, :edu_m])
+sort!(df, [:cohort, :edu_f, :edu_m])
 
 # Compute number of unmarried men at each educational level (counterfactual)
 men_unmarried = @chain count_df begin

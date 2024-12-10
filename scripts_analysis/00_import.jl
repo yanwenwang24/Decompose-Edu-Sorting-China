@@ -13,16 +13,13 @@
 ## ------------------------------------------------------------------------
 
 # Load the required packages
-using AlgebraOfGraphics
 using Arrow
-using CairoMakie
 using CategoricalArrays
 using DataFrames
 using DataFramesMeta
 using Distributions
 using FreqTables
 using LinearAlgebra
-using MakieThemes
 using ProportionalFitting
 using Random
 using Statistics

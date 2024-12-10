@@ -85,7 +85,7 @@ edu_comp_men_urban_long = stack(
     variable_name="Education",
 )
 edu_comp_men_urban_long[!, :urban] .= 2
-edu_comp_men_urban_long.Gender .= "men"
+edu_comp_men_urban_long.Gender .= "Men"
 
 edu_comp_men_long = vcat(
     edu_comp_men_urban_long,

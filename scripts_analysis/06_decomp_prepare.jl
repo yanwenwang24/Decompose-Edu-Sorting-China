@@ -1,6 +1,6 @@
 ## ------------------------------------------------------------------------
 ##
-## Script name: 06_decompose.jl
+## Script name: 06_decomp_prepare.jl
 ## Purpose: Prepare data for decomposition analysis
 ## Author: Yanwen Wang
 ## Date Created: 2024-12-09
@@ -8,9 +8,7 @@
 ##
 ## ------------------------------------------------------------------------
 ##
-## Notes: Decompose differences in educational sorting outcomes across cohorts
-## by educational expansion, educational gradients in marriage rates, and
-## assortative mating preferences.
+## Notes: Prepare data for decomposition analysis
 ##
 ## ------------------------------------------------------------------------
 

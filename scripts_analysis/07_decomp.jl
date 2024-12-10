@@ -24,8 +24,8 @@ df = DataFrame(Arrow.Table("Outputs/df_for_decomp.arrow"))
 ## Component 1 (expansion): marginal totals of education (married + unmarried)
 ## Component 2 (gradients): marriage rates by education (matrix)
 ## Component 3 (preferences): assortative mating preferences (matrix)
-comp1 = components_dict["45s"] # Get components for cohort 45s
-comp2 = components_dict["50s"] # Get components for cohort 50s
+comp1 = extract_components(df[df.cohort .== "45s", :])
+comp2 = extract_components(df[df.cohort .== "50s", :])
 
 # Perform decomposition
 results = decompose_differences(comp1, comp2)
@@ -42,7 +42,6 @@ verification = verify_decomposition(df, results, "45s", "50s", :cohort)
 
 # Bootstrap results (for standard errors)
 bootstrap_results = bootstrap_decomposition(comp1, comp2, df, n_bootstrap=1000)
-
 
 # For cohort analysis
 cohort_results = create_comparison_analysis(df, :cohort, n_bootstrap=1000)

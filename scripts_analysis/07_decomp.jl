@@ -45,7 +45,6 @@ bootstrap_results = bootstrap_decomposition(comp1, comp2, df, n_bootstrap=1000)
 
 # For cohort analysis
 cohort_results = create_comparison_analysis(df, :cohort, n_bootstrap=1000)
-summarize_results(cohort_results)
 =#
 
 # 3 Decomposition ----------------------------------------------------------

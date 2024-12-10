@@ -27,11 +27,11 @@ df_65s_rural = df_65s[df_65s.urban .== 1, :]
 df_65s_urban = df_65s[df_65s.urban .== 2, :]
 
 # Extract components for decomposition
-comp1 = extract_components(df_65s_rural)
-comp2 = extract_components(df_65s_urban)
+group1 = extract_components(df_65s_rural)
+group2 = extract_components(df_65s_urban)
 
 # Decompose differences
-results = decompose_differences(comp1, comp2)
+results = decompose_differences(group1, group2)
 
 for pattern in [:homogamy, :hypergamy, :hypogamy]
     println("\nDecomposition of differences in $pattern:")
@@ -41,7 +41,7 @@ for pattern in [:homogamy, :hypergamy, :hypogamy]
 end
 
 # Get standard errors
-bootstrap_results = bootstrap_decomposition(comp1, comp2, df_65s, n_bootstrap=1000)
+bootstrap_results = bootstrap_decomposition(group1, group2, df_65s, n_bootstrap=1000)
 =#
 
 # 3 Decomposition ----------------------------------------------------------

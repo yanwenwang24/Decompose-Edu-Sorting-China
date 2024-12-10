@@ -24,11 +24,11 @@ df = DataFrame(Arrow.Table("Outputs/df_for_decomp.arrow"))
 ## Component 1 (expansion): marginal totals of education (married + unmarried)
 ## Component 2 (gradients): marriage rates by education (matrix)
 ## Component 3 (preferences): assortative mating preferences (matrix)
-comp1 = extract_components(df[df.cohort .== "45s", :])
-comp2 = extract_components(df[df.cohort .== "50s", :])
+group1 = extract_components(df[df.cohort .== "45s", :])
+group2 = extract_components(df[df.cohort .== "50s", :])
 
 # Perform decomposition
-results = decompose_differences(comp1, comp2)
+results = decompose_differences(group1, group2)
 
 for pattern in [:homogamy, :hypergamy, :hypogamy]
     println("\nDecomposition of differences in $pattern:")
@@ -37,13 +37,10 @@ for pattern in [:homogamy, :hypergamy, :hypogamy]
     end
 end
 
-# Verify results
-verification = verify_decomposition(df, results, "45s", "50s", :cohort)
-
 # Bootstrap results (for standard errors)
-bootstrap_results = bootstrap_decomposition(comp1, comp2, df, n_bootstrap=1000)
+bootstrap_results = bootstrap_decomposition(group1, group2, df, n_bootstrap=1000)
 
-# For cohort analysis
+# For analysis of all cohorts (the first cohort as the reference cohort)
 cohort_results = create_comparison_analysis(df, :cohort, n_bootstrap=1000)
 =#
 

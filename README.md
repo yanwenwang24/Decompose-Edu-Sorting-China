@@ -1,6 +1,7 @@
 # Decompose-Edu-Sorting-China
 
 Replication package for:
+
 Wang, Yanwen, and Zheng Mu. "Understanding Trends in Marital Sorting by Education in China: A Decomposition Approach". (Under Review).
 
 ## Abstract

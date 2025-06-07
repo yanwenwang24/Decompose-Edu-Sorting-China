@@ -14,57 +14,185 @@
 
 # 1 Load data ---------------------------------------------------------------      
 
-census_2000 = DataFrame(Arrow.Table("Data_raw/census_2000.arrow"))
+# Read parquet file
+census_2000 = DataFrame(read_parquet("data/raw/census_2000.parquet"))
 
 # 2 Clean data --------------------------------------------------------------
 
 # 2.1 Select variables of interest ------------------------------------------
 
+# Year and geographical information
 census_2000 = @chain census_2000 begin
-    @select(
-        :year, :geo1_cn, :geo2_cn, :serial,
-        :persons, :headloc, :pernum, :sploc,
-        :relate, :sex, :age, :marst, :urban, :ethniccn,
-        :educcn
-    )
     @transform(
-        :province = lpad.(:geo1_cn .% 156000, 2, "0"),
-        :district = lpad.(:geo2_cn .% (:geo1_cn .* 1000), 2, "0"),
+        :year = Int.(:year),
+        :province = lpad.(Int.(:geo1_cn .% 156000), 2, "0"),
+        :district = lpad.(Int.(:geo2_cn .% (:geo1_cn .* 1000)), 2, "0"),
         :hhnumber = lpad.(Int.(:serial), 10, "0"),
-        :hhsize = :persons
+        :hhsize = Int.(:persons)
     )
-    @transform(:region = get.(Ref(region_dict), :province, missing))
-    @transform(:hhid = string.(:year, "_", :province, :district, :hhnumber))
     @transform(
-        :minority = ifelse.(:ethniccn .== 1, 0, 1),
-        :ethnicity = get.(Ref(ethn_dict), :ethniccn, missing),
-        :ethngrp = get.(Ref(ethngrp_dict1), :ethniccn, missing)
+        :region = get.(Ref(region_dict), :province, missing),
+        :prefecture = string.(:province, :district),
+        :hhid = string.(:year, :province, :district, :hhnumber)
     )
-    @transform(:female = ifelse.(:sex .== 1, 0, 1))
-    @transform(:birthy = :year - :age)
-    @transform(:marst = get.(Ref(marst_dict), :marst, missing))
     @transform(
-        :eduraw = eduraw_map[:educcn.+1],
-        :edu = edu_map[:educcn.+1]
-    )
-    @select(
-        :year, :hhid, :region, :province, :district, :hhnumber,
-        :pernum, :headloc, :sploc,
-        :relate, :female, :age, :birthy, :marst, :urban, :hhsize,
-        :eduraw, :edu,
-        :ethnicity, :ethngrp, :minority
+        # 1 = rural, 2 = urban
+        :urban = Int.(:urban),
     )
 end
+
+# Group quarter
+census_2000 = @chain census_2000 begin
+    @transform(
+        :gq = recode(
+            :gq,
+            10 => 0, # households
+            20 => 1, # group quarters
+            29 => 0, # 1-person unit created by splitting large household
+            missing => missing
+        )
+    )
+end
+
+# Demographics (gender, age, birth year, marital status)
+census_2000 = @chain census_2000 begin
+    @transform(:female = ifelse.(Int.(:sex) .== 1, 0, 1))
+    @transform(:age = Int.(:age))
+    @transform(:age = ifelse.(:age .== 999, missing, :age))
+    @transform(:birthy = :year - :age)
+    @transform(:marst = get.(Ref(marst_dict), :marst, missing))
+end
+
+# Hukou status
+census_2000 = @chain census_2000 begin
+    @transform(:cn2000a_regtype = Int.(:cn2000a_regtype))
+    @transform(
+        :hukou = recode(
+            :cn2000a_regtype,
+            1 => 1, # Agricultural
+            2 => 2, # Non-agricultural
+            9 => missing,
+            missing => missing
+        )
+    )
+end
+
+# Education
+census_2000 = @chain census_2000 begin
+    @transform(
+        :edu7 = recode(
+            :cn2000a_edattain,
+            0 => missing,
+            1 => 1, # Illiterate
+            2 => 1, # Illiterate
+            3 => 2, # Primary
+            4 => 3, # Junior Middle
+            5 => 4, # Secondary
+            6 => 4, # Secondary
+            7 => 5, # Some college
+            8 => 6, # College
+            9 => 7, # Graduate
+            missing => missing
+        ),
+        :edu6 = recode(
+            :cn2000a_edattain,
+            0 => missing,
+            1 => 1, # Illiterate
+            2 => 1, # Illiterate
+            3 => 2, # Primary
+            4 => 3, # Junior Middle
+            5 => 4, # Secondary
+            6 => 4, # Secondary
+            7 => 5, # Some college
+            8 => 6, # College
+            9 => 6, # College
+            missing => missing
+        ),
+        :edu5 = recode(
+            :cn2000a_edattain,
+            0 => missing,
+            1 => 1, # Primary or less
+            2 => 1, # Primary or less
+            3 => 1, # Primary or less
+            4 => 2, # Junior Middle
+            5 => 3, # Secondary
+            6 => 3, # Secondary
+            7 => 4, # Some college
+            8 => 5, # College
+            9 => 5, # College
+            missing => missing
+        ),
+        :edu4 = recode(
+            :cn2000a_edattain,
+            0 => missing,
+            1 => 1, # Primary or less
+            2 => 1, # Primary or less
+            3 => 1, # Primary or less
+            4 => 2, # Junior Middle
+            5 => 3, # Secondary
+            6 => 3, # Secondary
+            7 => 4, # College
+            8 => 4, # College
+            9 => 4, # College
+            missing => missing
+        )
+    )
+end
+
+# Relationships
+census_2000 = @chain census_2000 begin
+    @transform(
+        :pernum = Int.(:pernum),
+        :headloc = Int.(:headloc),
+        :sploc = Int.(:sploc),
+        :relate = Int.(:relate)
+    )
+end
+
+# Select variables of interest
+select!(
+    census_2000,
+    :year,
+    :hhid,
+    :region,
+    :province,
+    :district,
+    :prefecture,
+    :urban,
+    :hhnumber,
+    :hhsize,
+    :gq,
+    :pernum,
+    :headloc,
+    :sploc,
+    :relate,
+    :female,
+    :age,
+    :birthy,
+    :marst,
+    :hukou,
+    :edu7,
+    :edu6,
+    :edu5,
+    :edu4
+)
 
 # 2.2 Spousal information ----------------------------------------------------
 
 # Information needed for spouse
 df = @select(
     census_2000,
-    :hhid, :pernum, :sploc,
-    :ethnicity, :ethngrp, :minority,
-    :eduraw, :edu,
-    :age, :female, :urban
+    :hhid,
+    :pernum,
+    :sploc,
+    :female,
+    :age,
+    :birthy,
+    :hukou,
+    :edu7,
+    :edu6,
+    :edu5,
+    :edu4,
 )
 
 # Identify spousal information using `pernum` to `sploc` linkage
@@ -76,8 +204,15 @@ sp_df = leftjoin(
 
 @select!(
     sp_df,
-    :hhid, :pernum, :ethnicity_sp, :ethngrp_sp, :minority_sp,
-    :eduraw_sp, :edu_sp, :age_sp, :urban_sp
+    :hhid,
+    :pernum,
+    :age_sp,
+    :birthy_sp,
+    :hukou_sp,
+    :edu7_sp,
+    :edu6_sp,
+    :edu5_sp,
+    :edu4_sp
 )
 
 # Merge spousal information back to main dataset
@@ -86,22 +221,22 @@ leftjoin!(census_2000, sp_df, on=[:hhid, :pernum])
 # Identiy male and female information
 @transform!(
     census_2000,
-    :ethnicity_m = ifelse.(:female .== 0, :ethnicity, :ethnicity_sp),
-    :ethnicity_f = ifelse.(:female .== 0, :ethnicity_sp, :ethnicity),
-    :ethngrp_m = ifelse.(:female .== 0, :ethngrp, :ethngrp_sp),
-    :ethngrp_f = ifelse.(:female .== 0, :ethngrp_sp, :ethngrp),
-    :minority_m = ifelse.(:female .== 0, :minority, :minority_sp),
-    :minority_f = ifelse.(:female .== 0, :minority_sp, :minority),
-    :eduraw_m = ifelse.(:female .== 0, :eduraw, :eduraw_sp),
-    :eduraw_f = ifelse.(:female .== 0, :eduraw_sp, :eduraw),
-    :edu_m = ifelse.(:female .== 0, :edu, :edu_sp),
-    :edu_f = ifelse.(:female .== 0, :edu_sp, :edu),
     :age_m = ifelse.(:female .== 0, :age, :age_sp),
     :age_f = ifelse.(:female .== 0, :age_sp, :age),
-    :urban_m = ifelse.(:female .== 0, :urban, :urban_sp),
-    :urban_f = ifelse.(:female .== 0, :urban_sp, :urban)
+    :birthy_m = ifelse.(:female .== 0, :birthy, :birthy_sp),
+    :birthy_f = ifelse.(:female .== 0, :birthy_sp, :birthy),
+    :hukou_m = ifelse.(:female .== 0, :hukou, :hukou_sp),
+    :hukou_f = ifelse.(:female .== 0, :hukou_sp, :hukou),
+    :edu7_m = ifelse.(:female .== 0, :edu7, :edu7_sp),
+    :edu7_f = ifelse.(:female .== 0, :edu7_sp, :edu7),
+    :edu6_m = ifelse.(:female .== 0, :edu6, :edu6_sp),
+    :edu6_f = ifelse.(:female .== 0, :edu6_sp, :edu6),
+    :edu5_m = ifelse.(:female .== 0, :edu5, :edu5_sp),
+    :edu5_f = ifelse.(:female .== 0, :edu5_sp, :edu5),
+    :edu4_m = ifelse.(:female .== 0, :edu4, :edu4_sp),
+    :edu4_f = ifelse.(:female .== 0, :edu4_sp, :edu4)
 )
 
 # 3 Save data ---------------------------------------------------------------
 
-Arrow.write("Data_clean/census_2000.arrow", census_2000)
+write_parquet("data/processed/census_2000.parquet", census_2000)

@@ -43,6 +43,6 @@ transform!(sample_men, :birthy => ByRow(assign_cohort) => :cohort)
 
 # 2 Save samples ----------------------------------------------------------
 
-write_parquet("data/sample/sample_women.parquet", sample_women)
-write_parquet("data/sample/sample_men.parquet", sample_men)
-write_parquet("data/sample/sample_women_married.parquet", sample_women_married)
+write_parquet("data/samples/pooled/sample_women.parquet", sample_women)
+write_parquet("data/samples/pooled/sample_men.parquet", sample_men)
+write_parquet("data/samples/pooled/sample_women_married.parquet", sample_women_married)

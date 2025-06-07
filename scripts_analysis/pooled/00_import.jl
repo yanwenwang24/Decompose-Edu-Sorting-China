@@ -30,9 +30,9 @@ include("functions.jl")
 
 # Load data
 census = DataFrame(read_parquet("data/processed/census.parquet"))
-sample_women = DataFrame(read_parquet("data/sample/sample_women.parquet"))
-sample_men = DataFrame(read_parquet("data/sample/sample_men.parquet"))
-sample_women_married = DataFrame(read_parquet("data/sample/sample_women_married.parquet"))
+sample_women = DataFrame(read_parquet("data/samples/pooled/sample_women.parquet"))
+sample_men = DataFrame(read_parquet("data/samples/pooled/sample_men.parquet"))
+sample_women_married = DataFrame(read_parquet("data/samples/pooled/sample_women_married.parquet"))
 
 # Source scripts
 @time include("01_sample.jl")

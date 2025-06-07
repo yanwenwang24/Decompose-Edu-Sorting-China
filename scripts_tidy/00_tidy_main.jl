@@ -13,9 +13,12 @@
 ## ------------------------------------------------------------------------
 
 # Load the required packages
-using Arrow
+using CategoricalArrays
 using DataFrames
 using DataFramesMeta
+using FreqTables
+using Parquet
+using XLSX
 
 # Load dictionaries and functions
 include("dictionaries.jl")

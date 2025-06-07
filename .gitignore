@@ -1,5 +1,9 @@
-Data_clean/
-Data_raw/
-Samples/
-Samples_by_hukou/
+# Data and output directories
+data/
+outputs/
+
+# Mac OS
 .DS_Store
+
+# IDE
+.vscode/

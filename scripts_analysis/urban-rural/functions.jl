@@ -12,161 +12,197 @@
 ##
 ## ------------------------------------------------------------------------
 
-#=
-Function for restricting samples
-=#
+"""
+    FilterStep
 
-# Women's sample
-function restrict_sample_women(df)
-    n_original = nrow(df)
-    n_previous = n_original
-    stages = String[]
-    drops = Float64[]
+A struct representing a single step in the data filtering process.
 
-    # Step 1: Gender
-    df_gender = filter(row -> begin
-            !ismissing(row.female) && row.female == 1
-        end, df)
-    n_current = nrow(df_gender)
-    push!(
-        stages,
-        "Gender restriction"
-    )
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
-
-    # Step 2: Age restriction
-    df_age = filter(row -> begin
-            row.year == 2000 && !ismissing(row.age) && 25 <= row.age <= 34 ||
-                row.year == 2010 && !ismissing(row.age) && 25 <= row.age <= 34
-        end, df_gender)
-    n_current = nrow(df_age)
-    push!(
-        stages,
-        "Respondent not born in cohorts between 1966 and 1985 (non-overlapping)"
-    )
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
-
-    # Step 3: Respondent education information
-    df_edu_marst = filter(row -> begin
-            !ismissing(row.edu) && !ismissing(row.marst) && !ismissing(row.urban)
-        end, df_age)
-    n_current = nrow(df_edu_marst)
-    push!(stages, "Missing respondent's education, urban, or marital status")
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
-
-    # Step 4: Missing spousal education or urban status when married
-    df_edu_sp = filter(row -> begin
-            !(row.marst == "married" && (ismissing(row.edu_sp) || ismissing(row.urban_sp)))
-        end, df_edu_marst)
-    n_current = nrow(df_edu_sp)
-    push!(stages, "Missing spousal education when married")
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
-
-    # Step 5: Mistmacthed urban status when married
-    df_urban_match = filter(row -> begin
-            !(row.marst == "married" && row.urban != row.urban_sp)
-        end, df_edu_sp)
-    n_current = nrow(df_urban_match)
-    push!(stages, "Mismatched urban status when married")
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
-
-    df_final = df_urban_match
-    n_current = nrow(df_final)
-
-    # Print sample restriction summary
-    println("Sample Restriction Summary:")
-    println("Original sample size: ", n_original)
-    for (i, stage) in enumerate(stages)
-        println("Dropped due to ", stage, ": ", round(drops[i], digits=3), "%")
-    end
-    println("\nFinal analysis sample: ", n_current,
-        " (", round(n_current / n_original * 100, digits=3), "% of original sample)")
-
-    return df_final
+# Fields
+- `name::String`: The name of the filter step
+- `filter_fn::Function`: The function to apply for filtering
+- `description::String`: A detailed description of what the filter does
+"""
+struct FilterStep
+    name::String
+    filter_fn::Function
+    description::String
 end
 
-# Men's sample
-function restrict_sample_men(df)
-    n_original = nrow(df)
-    n_previous = n_original
-    stages = String[]
-    drops = Float64[]
+"""
+    restrict_sample_women(df::DataFrame) -> DataFrame
 
-    # Step 1: Gender
-    df_gender = filter(row -> begin
-            !ismissing(row.female) && row.female == 0
-        end, df)
-    n_current = nrow(df_gender)
-    push!(
-        stages,
-        "Gender restriction"
-    )
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
+Apply a series of filtering steps to restrict the sample for women based on predefined criteria.
 
-    # Step 2: Age restriction
-    df_age = filter(row -> begin
-            row.year == 2000 && !ismissing(row.age) && 27 <= row.age <= 36 ||
-                row.year == 2010 && !ismissing(row.age) && 27 <= row.age <= 36
-        end, df_gender)
-    n_current = nrow(df_age)
-    push!(
-        stages,
-        "Respondent not born in cohorts between 1964 and 1983 (non-overlapping)"
-    )
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
+# Arguments
+- `df::DataFrame`: The input DataFrame to be filtered
 
-    # Step 3: Respondent education information
-    df_edu_marst = filter(row -> begin
-            !ismissing(row.edu) && !ismissing(row.marst) && !ismissing(row.urban)
-        end, df_age)
-    n_current = nrow(df_edu_marst)
-    push!(stages, "Missing respondent's education, urban, or marital status")
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
+# Returns
+- A filtered DataFrame containing only observations that meet all criteria
 
-    # Step 4: Missing spousal education or urban status when married
-    df_edu_sp = filter(row -> begin
-            !(row.marst == "married" && (ismissing(row.edu_sp) || ismissing(row.urban_sp)))
-        end, df_edu_marst)
-    n_current = nrow(df_edu_sp)
-    push!(stages, "Missing spousal education when married")
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
+# Details
+Applies sequential filters for:
+1. Gender (female only)
+2. Age (25-34 for 2000 and 2010)
+3. Non-missing education, urban, and marital status
+4. Non-missing spousal education when married
 
-    # Step 5: Mistmacthed urban status when married
-    df_urban_match = filter(row -> begin
-            !(row.marst == "married" && row.urban != row.urban_sp)
-        end, df_edu_sp)
-    n_current = nrow(df_urban_match)
-    push!(stages, "Mismatched urban status when married")
-    push!(drops, (n_previous - n_current) / n_original * 100)
-    n_previous = n_current
+Prints progress information for each filtering step.
+"""
+function restrict_sample_women(df::DataFrame)
+    initial_size = size(df, 1)
+    println("Initial sample size: ", initial_size)
 
-    df_final = df_urban_match
-    n_current = nrow(df_final)
+    # Define all filtering steps
+    filter_steps = [
+        FilterStep(
+            "gender",
+            df -> filter(
+                row -> !ismissing(row.female) && row.female == 1, df
+            ),
+            "Filter by gender (female only)"
+        ),
+        FilterStep(
+            "age",
+            df -> filter(row -> begin
+                    row.year == 2000 && !ismissing(row.age) && 25 <= row.age <= 34 ||
+                        row.year == 2010 && !ismissing(row.age) && 25 <= row.age <= 34
+                end, df),
+            "Filter by age based on year: 2000/2010 (25-34)"
+        ),
+        FilterStep(
+            "educ, urban, and marst",
+            df -> filter(
+                row -> !ismissing(row.edu5) && !ismissing(row.marst) && !ismissing(row.urban), df
+            ),
+            "Missing respondent's education, urban, or marital status"
+        ),
+        FilterStep(
+            "edu_sp",
+            df -> filter(
+                row -> !(row.marst == "married" && ismissing(row.edu5_sp)), df
+            ),
+            "Missing spousal education when married"
+        )
+    ]
 
-    # Print sample restriction summary
-    println("Sample Restriction Summary:")
-    println("Original sample size: ", n_original)
-    for (i, stage) in enumerate(stages)
-        println("Dropped due to ", stage, ": ", round(drops[i], digits=3), "%")
+    # Apply filters sequentially
+    current_sample = df
+    previous_size = initial_size
+
+    for (i, step) in enumerate(filter_steps)
+        # Apply filter
+        current_sample = step.filter_fn(current_sample)
+        current_size = size(current_sample, 1)
+
+        # Calculate statistics
+        dropped = previous_size - current_size
+        percent_dropped = round(dropped / previous_size * 100, digits=2)
+
+        # Print results
+        println(
+            "Step ", i, ": ", step.description,
+            ", size: ", current_size,
+            ", dropped: ", dropped,
+            " (", percent_dropped, "%)"
+        )
+
+        previous_size = current_size
     end
-    println("\nFinal analysis sample: ", n_current,
-        " (", round(n_current / n_original * 100, digits=3), "% of original sample)")
 
-    return df_final
+    return current_sample
 end
 
-#=
-Function for assigning 5-year cohorts
-=#
+"""
+    restrict_sample_men(df::DataFrame) -> DataFrame
+
+Apply a series of filtering steps to restrict the sample for men based on predefined criteria.
+
+# Arguments
+- `df::DataFrame`: The input DataFrame to be filtered
+
+# Returns
+- A filtered DataFrame containing only observations that meet all criteria
+
+# Details
+Applies sequential filters for:
+1. Gender (male only)
+2. Age (27-36 for 2000 and 2010)
+3. Non-missing education, urban, and marital status
+4. Non-missing spousal education when married
+
+Prints progress information for each filtering step.
+"""
+function restrict_sample_men(df::DataFrame)
+    initial_size = size(df, 1)
+    println("Initial sample size: ", initial_size)
+
+    # Define all filtering steps
+    filter_steps = [
+        FilterStep(
+            "gender",
+            df -> filter(
+                row -> !ismissing(row.female) && row.female == 0, df
+            ),
+            "Filter by gender (male only)"
+        ),
+        FilterStep(
+            "age",
+            df -> filter(row -> begin
+                    row.year == 2000 && !ismissing(row.age) && 27 <= row.age <= 36 ||
+                        row.year == 2010 && !ismissing(row.age) && 27 <= row.age <= 36
+                end, df),
+            "Filter by age based on year: 2000/2010 (27-36)"
+        ),
+        FilterStep(
+            "educ, urban, and marst",
+            df -> filter(
+                row -> !ismissing(row.edu5) && !ismissing(row.marst) && !ismissing(row.urban), df
+            ),
+            "Missing respondent's education, urban, or marital status"
+        ),
+        FilterStep(
+            "edu_sp",
+            df -> filter(
+                row -> !(row.marst == "married" && ismissing(row.edu5_sp)), df
+            ),
+            "Missing spousal education when married"
+        )
+    ]
+
+    # Apply filters sequentially
+    current_sample = df
+    previous_size = initial_size
+
+    for (i, step) in enumerate(filter_steps)
+        # Apply filter
+        current_sample = step.filter_fn(current_sample)
+        current_size = size(current_sample, 1)
+
+        # Calculate statistics
+        dropped = previous_size - current_size
+        percent_dropped = round(dropped / previous_size * 100, digits=2)
+
+        # Print results
+        println(
+            "Step ", i, ": ", step.description,
+            ", size: ", current_size,
+            ", dropped: ", dropped,
+            " (", percent_dropped, "%)"
+        )
+
+        previous_size = current_size
+    end
+
+    return current_sample
+end
+
+"""
+    assign_cohort(year)
+
+Assign a cohort label to a year based on 5-year ranges in `cohort_ranges`.
+
+Returns the matching cohort label or `missing` if no match found.
+"""
 function assign_cohort(year)
     for (range, label) in cohort_ranges
         if year >= range[1] && year <= range[1] + 4
@@ -176,13 +212,26 @@ function assign_cohort(year)
     return missing
 end
 
-#=
-Function for calculating structural patterns under random matching
-=#
+"""
+    calculate_expected_proportion(group)
+
+Calculate expected proportions of homogamy, hypergamy, and hypogamy based on marginal distributions of education levels for females and males.
+
+# Arguments
+- `group`: Data structure containing `edu_f` (female education) and `edu_m` (male education) fields
+
+# Returns
+Named tuple with three fields:
+- `Homogamy`: Expected proportion of couples with same education level
+- `Hypergamy`: Expected proportion of couples where female education < male education  
+- `Hypogamy`: Expected proportion of couples where female education > male education
+
+Returns `missing` values if input data is empty or invalid.
+"""
 function calculate_expected_proportion(group)
     # Remove missing values and count frequencies
-    f_counts = countmap(skipmissing(group.edu_f))
-    m_counts = countmap(skipmissing(group.edu_m))
+    f_counts = countmap(skipmissing(group.edu4_f))
+    m_counts = countmap(skipmissing(group.edu4_m))
 
     # Check if data is valid
     if isempty(f_counts) || isempty(m_counts)
@@ -216,9 +265,6 @@ function calculate_expected_proportion(group)
     )
 end
 
-#=
-Functions for decomposition analysis
-=#
 """
     ComponentSet
 
@@ -240,17 +286,17 @@ Extract all three components from a single group's data.
 Returns a ComponentSet containing margins, weights, and pattern components.
 """
 function extract_components(df::DataFrame)
-    max_edu = maximum(df.edu_f) - 1
+    max_edu = maximum(df.edu4_f) - 1
     full_matrix = zeros(Float64, max_edu + 1, max_edu + 1)
 
     # Fill marriage table and margins
     for row in eachrow(df)
-        if row.edu_f ≤ max_edu && row.edu_m ≤ max_edu
-            full_matrix[row.edu_f, row.edu_m] = row.n
-        elseif row.edu_m == max_edu + 1 && row.edu_f ≤ max_edu
-            full_matrix[row.edu_f, end] = row.n
-        elseif row.edu_f == max_edu + 1 && row.edu_m ≤ max_edu
-            full_matrix[end, row.edu_m] = row.n
+        if row.edu4_f ≤ max_edu && row.edu4_m ≤ max_edu
+            full_matrix[row.edu4_f, row.edu4_m] = row.n
+        elseif row.edu4_m == max_edu + 1 && row.edu4_f ≤ max_edu
+            full_matrix[row.edu4_f, end] = row.n
+        elseif row.edu4_f == max_edu + 1 && row.edu4_m ≤ max_edu
+            full_matrix[end, row.edu4_m] = row.n
         end
     end
 
@@ -442,13 +488,25 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
 
     # Identify the grouping variable and values
     # We assume the first non-numeric, non-n column is the grouping variable
-    group_col = names(df)[findfirst(col -> col ∉ ["edu_f", "edu_m", "n", "n_unrounded"], names(df))]
+    group_col = names(df)[findfirst(col -> col ∉ ["edu4_f", "edu4_m", "n", "n_unrounded"], names(df))]
     group_vals = unique(df[:, group_col])
 
     # Remove rows with missing values and prepare for bootstrap
     valid_df = filter(row -> !ismissing(row.n), df)
-    n_total = Int(round(sum(valid_df.n)))
-    probs = valid_df.n ./ sum(valid_df.n)
+
+    # Get the initial group values that correspond to comp1 and comp2
+    group_val1 = group_vals[1]
+    group_val2 = group_vals[end]
+
+    # Split original data by group
+    group1_orig = filter(row -> row[group_col] == group_val1, valid_df)
+    group2_orig = filter(row -> row[group_col] == group_val2, valid_df)
+
+    # Calculate group-specific totals and probabilities
+    n_total1 = Int(round(sum(group1_orig.n)))
+    n_total2 = Int(round(sum(group2_orig.n)))
+    probs1 = group1_orig.n ./ sum(group1_orig.n)
+    probs2 = group2_orig.n ./ sum(group2_orig.n)
 
     # Storage for bootstrap results
     bootstrap_results = Vector{Dict{Symbol,Dict{String,Float64}}}(undef, n_bootstrap)
@@ -459,16 +517,15 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
 
     # Perform bootstrap iterations
     for b in 1:n_bootstrap
-        # Generate bootstrap sample
-        boot_df = copy(valid_df)
-        boot_df.n = rand(Distributions.Multinomial(n_total, probs))
+        # Generate bootstrap samples separately for each group
+        boot_group1 = copy(group1_orig)
+        boot_group1.n = rand(Distributions.Multinomial(n_total1, probs1))
 
-        # Split into groups based on the identified grouping variable
-        group1_df = filter(row -> row[group_col] == group_val1, boot_df)
-        group2_df = filter(row -> row[group_col] == group_val2, boot_df)
+        boot_group2 = copy(group2_orig)
+        boot_group2.n = rand(Distributions.Multinomial(n_total2, probs2))
 
-        boot_comp1 = extract_components(group1_df)
-        boot_comp2 = extract_components(group2_df)
+        boot_comp1 = extract_components(boot_group1)
+        boot_comp2 = extract_components(boot_group2)
 
         # Store decomposition results
         bootstrap_results[b] = decompose_differences(boot_comp1, boot_comp2).contributions
@@ -486,12 +543,13 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
             valid_values = filter(x -> !ismissing(x) && !isnan(x), all_values)
 
             point_est = point_estimates.contributions[pattern][component]
+            se_value = std(valid_values)
 
             results[pattern][component] = (
                 estimate=point_est,
-                se=std(valid_values),
-                ci_lower=quantile(valid_values, 0.025),
-                ci_upper=quantile(valid_values, 0.975)
+                se=se_value,
+                ci_lower=point_est - 1.96 * se_value,
+                ci_upper=point_est + 1.96 * se_value
             )
         end
     end
@@ -542,7 +600,7 @@ function create_comparison_analysis(df::DataFrame, group_var::Symbol; n_bootstra
                     group=group,
                     base_group=base_group,
                     group_var=String(group_var),
-                    pattern=pattern,
+                    pattern=String(pattern),
                     component=component,
                     estimate=result.estimate,
                     se=result.se,

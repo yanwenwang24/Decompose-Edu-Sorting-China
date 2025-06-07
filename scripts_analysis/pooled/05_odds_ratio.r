@@ -20,22 +20,22 @@ library(glm)
 library(marginaleffects)
 library(tidyverse)
 
-sample <- read_feather("Samples/sample.arrow")
+sample_women_married <- read_parquet("data/sample/sample_women_married.parquet")
 
 # 1 Contingency tables ----------------------------------------------------
 
-data <- sample %>%
-  group_by(cohort, edu_f, edu_m) %>%
+data <- sample_women_married %>%
+  group_by(cohort, edu4_f, edu4_m) %>%
   summarise(n = n()) %>%
   ungroup() %>%
   mutate(
-    homo = ifelse(edu_f == edu_m, 1, 0),
-    hyper = ifelse(edu_f < edu_m, 1, 0),
-    hypo = ifelse(edu_f > edu_m, 1, 0)
+    homo = ifelse(edu4_f == edu4_m, 1, 0),
+    hyper = ifelse(edu4_f < edu4_m, 1, 0),
+    hypo = ifelse(edu4_f > edu4_m, 1, 0)
   ) %>%
   mutate(
-    edu_f = factor(edu_f),
-    edu_m = factor(edu_m)
+    edu4_f = factor(edu4_f),
+    edu4_m = factor(edu4_m)
   )
 
 # 2 Log-linear model ------------------------------------------------------
@@ -44,7 +44,7 @@ data <- sample %>%
 
 # Homogamy
 mod_homo_agg <- glm(
-  n ~ edu_f * cohort + edu_m * cohort +
+  n ~ edu4_f * cohort + edu4_m * cohort +
     homo * cohort,
   data = data,
   family = poisson
@@ -61,7 +61,7 @@ homo_agg_df <- avg_comparisons(
 
 # Hypergamy
 mod_hyper_agg <- glm(
-  n ~ edu_f * cohort + edu_m * cohort +
+  n ~ edu4_f * cohort + edu4_m * cohort +
     hyper * cohort,
   data = data,
   family = poisson
@@ -78,7 +78,7 @@ hyper_agg_df <- avg_comparisons(
 
 # Hypogamy
 mod_hypo_agg <- glm(
-  n ~ edu_f * cohort + edu_m * cohort +
+  n ~ edu4_f * cohort + edu4_m * cohort +
     hypo * cohort,
   data = data,
   family = poisson
@@ -103,8 +103,8 @@ agg_df <- bind_rows(
 
 # Homogamy
 mod_homo_edu <- glm(
-  n ~ edu_f * cohort + edu_m * cohort +
-    homo * cohort + homo * edu_f * cohort,
+  n ~ edu4_f * cohort + edu4_m * cohort +
+    homo * cohort + homo * edu4_f * cohort,
   data = data,
   family = poisson
 )
@@ -112,16 +112,16 @@ mod_homo_edu <- glm(
 homo_edu_df <- avg_comparisons(
   mod_homo_edu,
   variables = c("homo"),
-  by = c("cohort", "edu_f"),
+  by = c("cohort", "edu4_f"),
   comparison = "lnratio"
 ) %>%
   as.data.frame() %>%
-  select(term, cohort, edu_f, estimate, conf.high, conf.low)
+  select(term, cohort, edu4_f, estimate, conf.high, conf.low)
 
 # Hypergamy
 mod_hyper_edu <- glm(
-  n ~ edu_f * cohort + edu_m * cohort +
-    hyper * cohort + hyper * edu_f * cohort,
+  n ~ edu4_f * cohort + edu4_m * cohort +
+    hyper * cohort + hyper * edu4_f * cohort,
   data = data,
   family = poisson
 )
@@ -129,16 +129,16 @@ mod_hyper_edu <- glm(
 hyper_edu_df <- avg_comparisons(
   mod_hyper_edu,
   variables = c("hyper"),
-  by = c("cohort", "edu_f"),
+  by = c("cohort", "edu4_f"),
   comparison = "lnratio"
 ) %>%
   as.data.frame() %>%
-  select(term, cohort, edu_f, estimate, conf.high, conf.low)
+  select(term, cohort, edu4_f, estimate, conf.high, conf.low)
 
 # Hypogamy
 mod_hypo_edu <- glm(
-  n ~ edu_f * cohort + edu_m * cohort +
-    hypo * cohort + hypo * edu_f * cohort,
+  n ~ edu4_f * cohort + edu4_m * cohort +
+    hypo * cohort + hypo * edu4_f * cohort,
   data = data,
   family = poisson
 )
@@ -146,11 +146,11 @@ mod_hypo_edu <- glm(
 hypo_edu_df <- avg_comparisons(
   mod_hypo_edu,
   variables = c("hypo"),
-  by = c("cohort", "edu_f"),
+  by = c("cohort", "edu4_f"),
   comparison = "lnratio"
 ) %>%
   as.data.frame() %>%
-  select(term, cohort, edu_f, estimate, conf.high, conf.low)
+  select(term, cohort, edu4_f, estimate, conf.high, conf.low)
 
 # Merge coefficients
 by_edu_df <- bind_rows(
@@ -158,10 +158,10 @@ by_edu_df <- bind_rows(
 ) %>%
   # Remove rank deficient
   filter(
-    !(term == "hyper" & edu_f == 4),
-    !(term == "hypo" & edu_f == 1)
+    !(term == "hyper" & edu4_f == 4),
+    !(term == "hypo" & edu4_f == 1)
   ) %>%
-  rename(edu = edu_f)
+  rename(edu = edu4_f)
 
 # Merge df aggregated and by education
 odds_ratio <- bind_rows(
@@ -172,7 +172,7 @@ odds_ratio <- bind_rows(
       edu == "Aggregated" ~ "Aggregated",
       edu == "1" ~ "Primary or less",
       edu == "2" ~ "Middle",
-      edu == "3" ~ "High",
+      edu == "3" ~ "Secondary",
       edu == "4" ~ "College or above"
     ),
     term = case_when(
@@ -182,4 +182,4 @@ odds_ratio <- bind_rows(
     )
   )
 
-write_feather(odds_ratio, "Outputs/odds_ratio.arrow")
+write_parquet(odds_ratio, "outputs/tables/pooled/odds_ratio.parquet")

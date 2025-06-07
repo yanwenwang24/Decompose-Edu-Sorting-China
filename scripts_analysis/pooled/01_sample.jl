@@ -25,14 +25,9 @@ cohort_ranges = (1946:5:1981) .=> [string(y,"s") for y in 45:5:80]
 
 ## Assign and categorize cohorts
 transform!(sample_women, :birthy => ByRow(assign_cohort) => :cohort)
-sample_women.cohort = categorical(
-    sample_women.cohort,
-    levels=last.(cohort_ranges),
-    ordered=true
-)
 
 # Sample of married women (main sample for analysis)
-sample = @subset(sample_women, :marst .== "married")
+sample_women_married = @subset(sample_women, :marst .== "married")
 
 # 1.2 Men ----------------------------------------------------------------
 
@@ -45,14 +40,9 @@ cohort_ranges = (1944:5:1983) .=> [string(y,"s") for y in 45:5:80]
 
 ## Assign and categorize cohorts
 transform!(sample_men, :birthy => ByRow(assign_cohort) => :cohort)
-sample_men.cohort = categorical(
-    sample_men.cohort,
-    levels=last.(cohort_ranges),
-    ordered=true
-)
 
 # 2 Save samples ----------------------------------------------------------
 
-Arrow.write("Samples/sample_women.arrow", sample_women)
-Arrow.write("Samples/sample_men.arrow", sample_men)
-Arrow.write("Samples/sample.arrow", sample)
+write_parquet("data/sample/sample_women.parquet", sample_women)
+write_parquet("data/sample/sample_men.parquet", sample_men)
+write_parquet("data/sample/sample_women_married.parquet", sample_women_married)

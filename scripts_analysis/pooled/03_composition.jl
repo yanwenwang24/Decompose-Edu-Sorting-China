@@ -14,7 +14,7 @@
 
 # 1 Women -----------------------------------------------------------------
 
-prop_women = prop(freqtable(sample_women, :cohort, :edu), margins=1)
+prop_women = prop(freqtable(sample_women, :cohort, :edu4), margins=1)
 
 # Convert named matrix to DataFrame
 data = parent(prop_women)
@@ -37,7 +37,7 @@ edu_comp_women_long.Gender .= "Women"
 
 # 2 Men -------------------------------------------------------------------
 
-prop_men = prop(freqtable(sample_men, :cohort, :edu), margins=1)
+prop_men = prop(freqtable(sample_men, :cohort, :edu4), margins=1)
 
 # Convert named matrix to DataFrame
 data = parent(prop_men)
@@ -62,4 +62,4 @@ edu_comp_men_long.Gender .= "Men"
 edu_comp_df = vcat(edu_comp_women_long, edu_comp_men_long)
 
 # Save to outputs
-Arrow.write("Outputs/edu_comp.arrow", edu_comp_df)
+write_parquet("outputs/tables/pooled/edu_comp.parquet", edu_comp_df)

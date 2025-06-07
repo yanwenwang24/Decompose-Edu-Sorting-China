@@ -16,7 +16,7 @@
 
 # 1 Load data --------------------------------------------------------------
 
-df = DataFrame(Arrow.Table("Outputs/df_for_decomp.arrow"))
+df = DataFrame(read_parquet("outputs/tables/pooled/df_for_decomp.parquet"))
 
 # 2 Example ----------------------------------------------------------------
 
@@ -50,4 +50,4 @@ cohort_results = create_comparison_analysis(df, :cohort, n_bootstrap=1000)
 decomp_df = create_comparison_analysis(df, :cohort, n_bootstrap=1000)
 
 # Save results
-Arrow.write("Outputs/decomp.arrow", decomp_df)
+write_parquet("outputs/tables/pooled/decomp.parquet", decomp_df)

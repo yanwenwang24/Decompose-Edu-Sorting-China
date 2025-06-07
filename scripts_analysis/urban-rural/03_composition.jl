@@ -14,7 +14,7 @@
 
 # 1 Women -----------------------------------------------------------------
 
-prop_women = prop(freqtable(sample_women, :cohort, :edu, :urban), margins=1:2:3)
+prop_women = prop(freqtable(sample_women, :cohort, :edu4, :urban), margins=1:2:3)
 
 # Convert named matrix to DataFrame
 data_rural = parent(prop_women)[:, :, 1]
@@ -55,7 +55,7 @@ sort!(edu_comp_women_long, :cohort)
 
 # 2 Men -------------------------------------------------------------------
 
-prop_men = prop(freqtable(sample_men, :cohort, :edu, :urban), margins=1:2:3)
+prop_men = prop(freqtable(sample_men, :cohort, :edu4, :urban), margins=1:2:3)
 
 # Convert named matrix to DataFrame
 data_rural = parent(prop_men)[:, :, 1]
@@ -98,4 +98,4 @@ sort!(edu_comp_men_long, :cohort)
 edu_comp_df = vcat(edu_comp_women_long, edu_comp_men_long)
 
 # Save to outputs
-Arrow.write("Outputs_by_hukou/edu_comp.arrow", edu_comp_df)
+write_parquet("outputs/tables/urban-rural/edu_comp.parquet", edu_comp_df)

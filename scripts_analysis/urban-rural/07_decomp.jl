@@ -15,7 +15,7 @@
 
 # 1 Load data --------------------------------------------------------------
 
-df = DataFrame(Arrow.Table("Outputs_by_hukou/df_for_decomp.arrow"))
+df = DataFrame(read_parquet("outputs/tables/urban-rural/df_for_decomp.parquet"))
 
 # 2 Example ----------------------------------------------------------------
 
@@ -71,5 +71,5 @@ for cohort in cohorts
     end
 end
 
-# Save results 
-Arrow.write("Outputs_by_hukou/decomp.arrow", decomp_df)
+# Save results
+write_parquet("outputs/tables/urban-rural/decomp.parquet", decomp_df)

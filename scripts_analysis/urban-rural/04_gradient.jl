@@ -16,11 +16,11 @@
 
 # Ratio of unmarried to married
 women_ratio = combine(
-    groupby(sample_women, [:urban, :birthy, :edu]),
+    groupby(sample_women, [:urban, :birthy, :edu4]),
     # Calculate married and unmarried counts
     :marst => (x -> sum(x .== "married")) => :married,
     :marst => (x -> sum(x .!= "married")) => :unmarried
-) 
+)
 
 # Add ratio and gender columns
 women_ratio.ratio = women_ratio.unmarried ./ women_ratio.married
@@ -30,11 +30,11 @@ women_ratio.Gender .= "Women"
 
 # Ratio of unmarried to married
 men_ratio = combine(
-    groupby(sample_men, [:urban, :birthy, :edu]),
+    groupby(sample_men, [:urban, :birthy, :edu4]),
     # Calculate married and unmarried counts
     :marst => (x -> sum(x .== "married")) => :married,
     :marst => (x -> sum(x .!= "married")) => :unmarried
-) 
+)
 
 # Add ratio and gender columns
 men_ratio.ratio = men_ratio.unmarried ./ men_ratio.married
@@ -44,4 +44,4 @@ men_ratio.Gender .= "Men"
 gradients_df = vcat(women_ratio, men_ratio)
 
 # Save to outputs
-Arrow.write("Outputs_by_hukou/gradients.arrow", gradients_df)
+write_parquet("outputs/tables/urban-rural/gradients.parquet", gradients_df)

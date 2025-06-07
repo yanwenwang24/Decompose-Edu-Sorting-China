@@ -15,12 +15,12 @@
 
 # 1 Observed trends -------------------------------------------------------
 
-observed_pattern = @chain sample begin
+observed_pattern = @chain sample_women_married begin
     @groupby(:urban, :birthy)
     @combine(
-        :Homogamy = mean(:homo),
-        :Hypergamy = mean(:hyper),
-        :Hypogamy = mean(:hypo)
+        :Homogamy = mean(:homo4),
+        :Hypergamy = mean(:hyper4),
+        :Hypogamy = mean(:hypo4)
     )
 end
 
@@ -35,7 +35,7 @@ observed_pattern_long.Type .= "Observed"
 
 # 2 Structural trends -----------------------------------------------------
 
-structural_pattern = combine(groupby(sample, [:urban, :birthy])) do group
+structural_pattern = combine(groupby(sample_women_married, [:urban, :birthy])) do group
     calculate_expected_proportion(group)
 end
 
@@ -52,4 +52,4 @@ structural_pattern_long.Type .= "Structural"
 trends_df = vcat(observed_pattern_long, structural_pattern_long)
 
 # Save to outputs
-Arrow.write("Outputs_by_hukou/trends.arrow", trends_df)
+write_parquet("outputs/tables/urban-rural/trends.parquet", trends_df)

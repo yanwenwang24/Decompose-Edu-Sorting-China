@@ -88,7 +88,7 @@ edu_comp_pooled_plt <- ggplot(
   theme(legend.position = "none") +
   facet_grid(~Gender)
 
-# By urban  
+# By urban
 edu_comp_by_urban_plt <- edu_comp_by_urban %>%
   ggplot(aes(x = cohort, y = value, fill = Education)) +
   geom_bar(position = "fill", stat = "identity") +

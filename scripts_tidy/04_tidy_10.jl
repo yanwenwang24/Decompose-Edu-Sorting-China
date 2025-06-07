@@ -54,8 +54,9 @@ end
 
 census_2010 = @chain census_2010 begin
     @transform :code = [ismissing(x) ? missing : x[1:end-3] for x in :地址码]
-    leftjoin(area_code, on=[:code])
 end
+
+leftjoin!(census_2010, area_code, on=[:code])
 
 # Group quarter
 census_2010 = @chain census_2010 begin

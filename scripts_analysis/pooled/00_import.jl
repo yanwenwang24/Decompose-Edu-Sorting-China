@@ -13,13 +13,13 @@
 ## ------------------------------------------------------------------------
 
 # Load the required packages
-using Arrow
 using CategoricalArrays
 using DataFrames
 using DataFramesMeta
 using Distributions
 using FreqTables
 using LinearAlgebra
+using Parquet
 using ProportionalFitting
 using Random
 using Statistics
@@ -29,13 +29,13 @@ using StatsBase
 include("functions.jl")
 
 # Load data
-census = DataFrame(Arrow.Table("Data_clean/census.arrow"))
+census = DataFrame(read_parquet("data/processed/census.parquet"))
 sample_women = DataFrame(Arrow.Table("Samples/sample_women.arrow"))
 sample_men = DataFrame(Arrow.Table("Samples/sample_men.arrow"))
 sample = DataFrame(Arrow.Table("Samples/sample.arrow"))
 
 # Source scripts
-# @time include("01_sample.jl")
+@time include("01_sample.jl")
 @time include("02_trends.jl")
 @time include("03_composition.jl")
 @time include("04_gradient.jl")

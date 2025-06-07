@@ -14,12 +14,12 @@
 
 # 1 Load data -------------------------------------------------------------
 
-trends_pooled <- read_feather("Outputs/trends.arrow")
-trends_by_hukou <- read_feather("Outputs_by_hukou/trends.arrow")
+trends_pooled <- read_parquet("outputs/tables/pooled/trends.parquet")
+trends_by_urban <- read_parquet("outputs/tables/urban-rural/trends.parquet")
 
 # Recode urban
-trends_by_hukou$urban <- ifelse(
-  trends_by_hukou$urban == 1, "Rural", "Urban"
+trends_by_urban$urban <- ifelse(
+  trends_by_urban$urban == 1, "Rural", "Urban"
 )
 
 # 2 Plot trends -----------------------------------------------------------
@@ -49,14 +49,14 @@ trends_pooled_plt <- trends_pooled %>%
   ) +
   theme(legend.position = "none")
 
-# Trends by hukou
-trends_by_hukou_plt <- trends_by_hukou %>%
+# Trends by urban
+trends_by_urban_plt <- trends_by_urban %>%
   ggplot(aes(x = birthy, y = Proportion, color = Pattern, shape = Type)) +
   geom_point(alpha = 0.5) +
   geom_smooth(aes(linetype = Type), se = FALSE) +
   scale_x_continuous(
     breaks = seq(
-      min(trends_by_hukou$birthy), max(trends_by_hukou$birthy),
+      min(trends_by_urban$birthy), max(trends_by_urban$birthy),
       by = 5
     )
   ) +
@@ -74,11 +74,11 @@ trends_by_hukou_plt <- trends_by_hukou %>%
   ) +
   facet_grid(~urban)
 
-trends_plt <- trends_pooled_plt + trends_by_hukou_plt
+trends_plt <- trends_pooled_plt + trends_by_urban_plt
 
 # Save the plot
 ggsave(
-  "Graphs/trends.png",
+  "outputs/graphs/trends.png",
   trends_plt,
   width = 10,
   height = 10,

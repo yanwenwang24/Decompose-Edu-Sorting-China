@@ -14,8 +14,8 @@
 
 # 1 Load data -------------------------------------------------------------
 
-decomp_pooled <- read_feather("Outputs/decomp.arrow")
-decomp_by_hukou <- read_feather("Outputs_by_hukou/decomp.arrow")
+decomp_pooled <- read_parquet("outputs/tables/pooled/decomp.parquet")
+decomp_by_urban <- read_parquet("outputs/tables/urban-rural/decomp.parquet")
 
 # Recode
 decomp_pooled <- decomp_pooled %>%
@@ -38,7 +38,7 @@ decomp_pooled <- decomp_pooled %>%
     )
   )
 
-decomp_by_hukou <- decomp_by_hukou %>%
+decomp_by_urban <- decomp_by_urban %>%
   filter(group != base_group) %>%
   filter(component != "total") %>%
   mutate(pattern = str_to_title(pattern)) %>%
@@ -81,8 +81,8 @@ decomp_pooled_plt <- decomp_pooled %>%
   theme(legend.position = "none") +
   facet_grid(~pattern)
 
-# By hukou
-decomp_by_hukou_plt <- decomp_by_hukou %>%
+# By urban
+decomp_by_urban_plt <- decomp_by_urban %>%
   ggplot(aes(x = cohort, y = estimate, fill = component)) +
   geom_bar(position = "stack", stat = "identity") +
   scale_y_continuous(labels = scales::percent) +
@@ -103,11 +103,11 @@ decomp_by_hukou_plt <- decomp_by_hukou %>%
     legend.position = "bottom"
   )
 
-decomp_plt <- decomp_pooled_plt / decomp_by_hukou_plt
+decomp_plt <- decomp_pooled_plt / decomp_by_urban_plt
 
 # Save the plot
 ggsave(
-  "Graphs/decomp.png",
+  "outputs/graphs/decomp.png",
   decomp_plt,
   width = 8,
   height = 12,

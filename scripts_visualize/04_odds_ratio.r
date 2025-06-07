@@ -14,8 +14,10 @@
 
 # 1 Load data -------------------------------------------------------------
 
-odds_ratio_pooled <- read_feather("Outputs/odds_ratio.arrow")
-odds_ratio_by_hukou <- read_feather("Outputs_by_hukou/odds_ratio.arrow")
+odds_ratio_pooled <- read_parquet("outputs/tables/pooled/odds_ratio.parquet")
+odds_ratio_by_urban <- read_parquet(
+  "outputs/tables/urban-rural/odds_ratio.parquet"
+)
 
 # Recode education and urban status
 odds_ratio_pooled <- odds_ratio_pooled %>%
@@ -24,20 +26,20 @@ odds_ratio_pooled <- odds_ratio_pooled %>%
       levels = c(
         "Primary or less",
         "Middle",
-        "High",
+        "Secondary",
         "College or above",
         "Aggregated"
       )
     )
   )
 
-odds_ratio_by_hukou <- odds_ratio_by_hukou %>%
+odds_ratio_by_urban <- odds_ratio_by_urban %>%
   mutate(
     Education = factor(edu,
       levels = c(
         "Primary or less",
         "Middle",
-        "High",
+        "Secondary",
         "College or above",
         "Aggregated"
       )
@@ -62,7 +64,7 @@ odds_ratio_pooled_plt <- odds_ratio_pooled %>%
     values = c(
       "Primary or less" = "#fd7f6f",
       "Middle" = "#7eb0d5",
-      "High" = "#b2e061",
+      "Secondary" = "#b2e061",
       "College or above" = "#bd7ebe",
       "Aggregated" = "grey"
     ),
@@ -72,7 +74,7 @@ odds_ratio_pooled_plt <- odds_ratio_pooled %>%
     values = c(
       "Primary or less" = "solid",
       "Middle" = "solid",
-      "High" = "solid",
+      "Secondary" = "solid",
       "College or above" = "solid",
       "Aggregated" = "dashed"
     ),
@@ -85,8 +87,8 @@ odds_ratio_pooled_plt <- odds_ratio_pooled %>%
   theme(legend.position = "none") +
   facet_grid(~term)
 
-# By hukou
-odds_ratio_by_hukou_plt <- odds_ratio_by_hukou %>%
+# By urban
+odds_ratio_by_urban_plt <- odds_ratio_by_urban %>%
   ggplot(aes(
     x = cohort, y = estimate,
     color = Education, group = Education, linetype = Education
@@ -100,7 +102,7 @@ odds_ratio_by_hukou_plt <- odds_ratio_by_hukou %>%
     values = c(
       "Primary or less" = "#fd7f6f",
       "Middle" = "#7eb0d5",
-      "High" = "#b2e061",
+      "Secondary" = "#b2e061",
       "College or above" = "#bd7ebe",
       "Aggregated" = "grey"
     ),
@@ -110,7 +112,7 @@ odds_ratio_by_hukou_plt <- odds_ratio_by_hukou %>%
     values = c(
       "Primary or less" = "solid",
       "Middle" = "solid",
-      "High" = "solid",
+      "Secondary" = "solid",
       "College or above" = "solid",
       "Aggregated" = "dashed"
     ),
@@ -121,13 +123,13 @@ odds_ratio_by_hukou_plt <- odds_ratio_by_hukou %>%
     y = "Log-odd ratios"
   ) +
   theme(legend.position = "bottom") +
-  facet_grid(~term+urban)
+  facet_grid(~ term + urban)
 
-odds_ratio_plt <- odds_ratio_pooled_plt / odds_ratio_by_hukou_plt
+odds_ratio_plt <- odds_ratio_pooled_plt / odds_ratio_by_urban_plt
 
 # Save the plot
 ggsave(
-  "Graphs/odds_ratio.png",
+  "outputs/graphs/odds_ratio.png",
   odds_ratio_plt,
   width = 8,
   height = 12,

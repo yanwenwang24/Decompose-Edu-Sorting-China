@@ -14,38 +14,40 @@
 
 # 1 Load data -------------------------------------------------------------
 
-gradient_pooled <- read_feather("Outputs/gradients.arrow")
-gradient_by_hukou <- read_feather("Outputs_by_hukou/gradients.arrow")
+gradient_pooled <- read_parquet("outputs/tables/pooled/gradients.parquet")
+gradient_by_urban <- read_parquet(
+  "outputs/tables/urban-rural/gradients.parquet"
+)
 
 # Recode education and urban status
 gradient_pooled <- gradient_pooled %>%
   mutate(
     Education = case_when(
-      edu == 1 ~ "Primary or lower",
-      edu == 2 ~ "Middle school",
-      edu == 3 ~ "High school",
-      edu == 4 ~ "College or higher"
+      edu4 == 1 ~ "Primary or less",
+      edu4 == 2 ~ "Middle",
+      edu4 == 3 ~ "Secondary",
+      edu4 == 4 ~ "College or higher"
     ),
     Education = factor(Education,
       levels = c(
-        "Primary or lower", "Middle school",
-        "High school", "College or higher"
+        "Primary or less", "Middle",
+        "Secondary", "College or higher"
       )
     )
   )
 
-gradient_by_hukou <- gradient_by_hukou %>%
+gradient_by_urban <- gradient_by_urban %>%
   mutate(
     Education = case_when(
-      edu == 1 ~ "Primary or lower",
-      edu == 2 ~ "Middle school",
-      edu == 3 ~ "High school",
-      edu == 4 ~ "College or higher"
+      edu4 == 1 ~ "Primary or less",
+      edu4 == 2 ~ "Middle",
+      edu4 == 3 ~ "Secondary",
+      edu4 == 4 ~ "College or higher"
     ),
     Education = factor(Education,
       levels = c(
-        "Primary or lower", "Middle school",
-        "High school", "College or higher"
+        "Primary or less", "Middle",
+        "Secondary", "College or higher"
       )
     )
   ) %>%
@@ -74,9 +76,9 @@ gradient_pooled_plt <- ggplot(
   theme(legend.position = "none") +
   facet_grid(~Gender)
 
-# By hukou
-gradient_by_hukou_plt <- ggplot(
-  gradient_by_hukou,
+# By urban
+gradient_by_urban_plt <- ggplot(
+  gradient_by_urban,
   aes(x = birthy, y = ratio, color = Education, group = Education)
 ) +
   geom_point(alpha = 0.75) +
@@ -92,13 +94,13 @@ gradient_by_hukou_plt <- ggplot(
     y = "Ratio of unmarried to married"
   ) +
   theme(legend.position = "bottom") +
-  facet_grid(~urban+Gender)
+  facet_grid(~ urban + Gender)
 
-gradient_plt <- gradient_pooled_plt / gradient_by_hukou_plt
+gradient_plt <- gradient_pooled_plt / gradient_by_urban_plt
 
 # Save the plot
 ggsave(
-  "Graphs/gradient.png",
+  "outputs/graphs/gradient.png",
   gradient_plt,
   width = 8,
   height = 12,

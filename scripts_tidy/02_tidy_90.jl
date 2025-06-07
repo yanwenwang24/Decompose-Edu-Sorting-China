@@ -14,57 +14,158 @@
 
 # 1 Load data ---------------------------------------------------------------      
 
-census_1990 = DataFrame(Arrow.Table("Data_raw/census_1990.arrow"))
+# Read parquet file
+census_1990 = DataFrame(read_parquet("data/raw/census_1990.parquet"))
 
 # 2 Clean data --------------------------------------------------------------
 
 # 2.1 Select variables of interest ------------------------------------------
 
+# Year and geographical information
 census_1990 = @chain census_1990 begin
-    @select(
-        :year, :geo1_cn, :geo2_cn, :serial,
-        :persons, :headloc, :pernum, :sploc,
-        :relate, :sex, :age, :marst, :ethniccn,
-        :educcn
-    )
     @transform(
-        :province = lpad.(:geo1_cn .% 156000, 2, "0"),
-        :district = lpad.(:geo2_cn .% (:geo1_cn .* 1000), 2, "0"),
+        :year = Int.(:year),
+        :province = lpad.(Int.(:geo1_cn .% 156000), 2, "0"),
+        :district = lpad.(Int.(:geo2_cn .% (:geo1_cn .* 1000)), 2, "0"),
         :hhnumber = lpad.(Int.(:serial), 10, "0"),
-        :hhsize = :persons
+        :hhsize = Int.(:persons)
     )
-    @transform(:region = get.(Ref(region_dict), :province, missing))
-    @transform(:hhid = string.(:year, "_", :province, :district, :hhnumber))
     @transform(
-        :minority = ifelse.(:ethniccn .== 1, 0, 1),
-        :ethnicity = get.(Ref(ethn_dict), :ethniccn, missing),
-        :ethngrp = get.(Ref(ethngrp_dict1), :ethniccn, missing)
-    )
-    @transform(:female = ifelse.(:sex .== 1, 0, 1))
-    @transform(:birthy = :year - :age)
-    @transform(:marst = get.(Ref(marst_dict), :marst, missing))
-    @transform(
-        :eduraw = eduraw_map[:educcn.+1],
-        :edu = edu_map[:educcn.+1]
-    )
-    @transform(:urban = 999) # missing urban status
-    @select(
-        :year, :hhid, :region, :province, :district, :hhnumber,
-        :pernum, :headloc, :sploc,
-        :relate, :female, :age, :birthy, :marst, :urban, :hhsize,
-        :eduraw, :edu,
-        :ethnicity, :ethngrp, :minority
+        :region = get.(Ref(region_dict), :province, missing),
+        :prefecture = string.(:province, :district),
+        :hhid = string.(:year, :province, :district, :hhnumber)
     )
 end
+
+# Group quarter
+census_1990 = @chain census_1990 begin
+    @transform(
+        :gq = recode(
+            :gq,
+            10 => 0, # households
+            20 => 1, # group quarters
+            29 => 0, # 1-person unit created by splitting large household
+            missing => missing
+        )
+    )
+end
+
+# Demographics (gender, age, birth year, marital status)
+census_1990 = @chain census_1990 begin
+    @transform(:female = ifelse.(Int.(:sex) .== 1, 0, 1))
+    @transform(:age = Int.(:age))
+    @transform(:age = ifelse.(:age .== 999, missing, :age))
+    @transform(:birthy = :year - :age)
+    @transform(:marst = get.(Ref(marst_dict), :marst, missing))
+end
+
+# Hukou status
+census_1990 = @chain census_1990 begin
+    @transform(:cn1990a_hhtyap = Int.(:cn1990a_hhtyap))
+    @transform(
+        :hukou = recode(
+            :cn1990a_hhtyap,
+            0 => missing,
+            1 => 1, # Agricultural
+            2 => 2, # Non-agricultural
+            missing => missing
+        )
+    )
+end
+
+# Education
+census_1990 = @chain census_1990 begin
+    @transform(
+        :edu6 = recode(
+            :cn1990a_edlev1,
+            0 => missing,
+            1 => 1, # Illiterate
+            2 => 2, # Primary
+            3 => 3, # Junior Middle
+            4 => 4, # Secondary
+            5 => 4, # Secondary
+            6 => 5, # Some college
+            7 => 6, # College
+            missing => missing
+        ),
+        :edu5 = recode(
+            :cn1990a_edlev1,
+            0 => missing,
+            1 => 1, # Primary or less
+            2 => 1, # Primary or less
+            3 => 2, # Junior Middle
+            4 => 3, # Secondary
+            5 => 3, # Secondary
+            6 => 4, # Some college
+            7 => 5, # College
+            missing => missing
+        ),
+        :edu4 = recode(
+            :cn1990a_edlev1,
+            0 => missing,
+            1 => 1, # Primary or less
+            2 => 1, # Primary or less
+            3 => 2, # Junior Middle
+            4 => 3, # Secondary
+            5 => 3, # Secondary
+            6 => 4, # Some college
+            7 => 4, # College
+            missing => missing
+        )
+    )
+end
+
+# Relationships
+census_1990 = @chain census_1990 begin
+    @transform(
+        :pernum = Int.(:pernum),
+        :headloc = Int.(:headloc),
+        :sploc = Int.(:sploc),
+        :relate = Int.(:relate)
+    )
+end
+
+# Select variables of interest
+select!(
+    census_1990,
+    :year,
+    :hhid,
+    :region,
+    :province,
+    :district,
+    :prefecture,
+    :hhnumber,
+    :hhsize,
+    :gq,
+    :pernum,
+    :headloc,
+    :sploc,
+    :relate,
+    :female,
+    :age,
+    :birthy,
+    :marst,
+    :hukou,
+    :edu6,
+    :edu5,
+    :edu4
+)
 
 # 2.2 Spousal information ----------------------------------------------------
 
 # Information needed for spouse
-df = @select(census_1990,
-    :hhid, :pernum, :sploc,
-    :ethnicity, :ethngrp, :minority,
-    :eduraw, :edu,
-    :age, :female, :urban
+df = @select(
+    census_1990,
+    :hhid,
+    :pernum,
+    :sploc,
+    :female,
+    :age,
+    :birthy,
+    :hukou,
+    :edu6,
+    :edu5,
+    :edu4,
 )
 
 # Identify spousal information using `pernum` to `sploc` linkage
@@ -76,8 +177,14 @@ sp_df = leftjoin(
 
 @select!(
     sp_df,
-    :hhid, :pernum, :ethnicity_sp, :ethngrp_sp, :minority_sp,
-    :eduraw_sp, :edu_sp, :age_sp, :urban_sp
+    :hhid,
+    :pernum,
+    :age_sp,
+    :birthy_sp,
+    :hukou_sp,
+    :edu6_sp,
+    :edu5_sp,
+    :edu4_sp
 )
 
 # Merge spousal information back to main dataset
@@ -86,22 +193,20 @@ leftjoin!(census_1990, sp_df, on=[:hhid, :pernum])
 # Identiy male and female information
 @transform!(
     census_1990,
-    :ethnicity_m = ifelse.(:female .== 0, :ethnicity, :ethnicity_sp),
-    :ethnicity_f = ifelse.(:female .== 0, :ethnicity_sp, :ethnicity),
-    :ethngrp_m = ifelse.(:female .== 0, :ethngrp, :ethngrp_sp),
-    :ethngrp_f = ifelse.(:female .== 0, :ethngrp_sp, :ethngrp),
-    :minority_m = ifelse.(:female .== 0, :minority, :minority_sp),
-    :minority_f = ifelse.(:female .== 0, :minority_sp, :minority),
-    :eduraw_m = ifelse.(:female .== 0, :eduraw, :eduraw_sp),
-    :eduraw_f = ifelse.(:female .== 0, :eduraw_sp, :eduraw),
-    :edu_m = ifelse.(:female .== 0, :edu, :edu_sp),
-    :edu_f = ifelse.(:female .== 0, :edu_sp, :edu),
     :age_m = ifelse.(:female .== 0, :age, :age_sp),
     :age_f = ifelse.(:female .== 0, :age_sp, :age),
-    :urban_m = ifelse.(:female .== 0, :urban, :urban_sp),
-    :urban_f = ifelse.(:female .== 0, :urban_sp, :urban)
+    :birthy_m = ifelse.(:female .== 0, :birthy, :birthy_sp),
+    :birthy_f = ifelse.(:female .== 0, :birthy_sp, :birthy),
+    :hukou_m = ifelse.(:female .== 0, :hukou, :hukou_sp),
+    :hukou_f = ifelse.(:female .== 0, :hukou_sp, :hukou),
+    :edu6_m = ifelse.(:female .== 0, :edu6, :edu6_sp),
+    :edu6_f = ifelse.(:female .== 0, :edu6_sp, :edu6),
+    :edu5_m = ifelse.(:female .== 0, :edu5, :edu5_sp),
+    :edu5_f = ifelse.(:female .== 0, :edu5_sp, :edu5),
+    :edu4_m = ifelse.(:female .== 0, :edu4, :edu4_sp),
+    :edu4_f = ifelse.(:female .== 0, :edu4_sp, :edu4)
 )
 
 # 3 Save data ---------------------------------------------------------------
 
-Arrow.write("Data_clean/census_1990.arrow", census_1990)
+write_parquet("data/processed/census_1990.parquet", census_1990)

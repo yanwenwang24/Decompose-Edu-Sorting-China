@@ -20,7 +20,9 @@ library(glm)
 library(marginaleffects)
 library(tidyverse)
 
-sample_women_married <- read_parquet("data/sample/sample_women_married.parquet")
+sample_women_married <- read_parquet(
+  "data/samples/pooled/sample_women_married.parquet"
+)
 
 # 1 Contingency tables ----------------------------------------------------
 

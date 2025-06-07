@@ -89,8 +89,8 @@ census_1982 = @chain census_1982 begin
         :edu4 = recode(
             :cn1982a_educ,
             0 => missing,
-            1 => 4, # Some college or higher
-            2 => 4, # Some college or higher
+            1 => 4, # College
+            2 => 4, # College
             3 => 3, # Secondary
             4 => 2, # Junior Middle
             5 => 1, # Primary or less

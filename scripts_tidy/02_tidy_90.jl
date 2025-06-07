@@ -108,7 +108,7 @@ census_1990 = @chain census_1990 begin
             3 => 2, # Junior Middle
             4 => 3, # Secondary
             5 => 3, # Secondary
-            6 => 4, # Some college
+            6 => 4, # College
             7 => 4, # College
             missing => missing
         )

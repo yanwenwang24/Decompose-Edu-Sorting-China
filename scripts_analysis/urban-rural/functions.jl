@@ -72,14 +72,14 @@ function restrict_sample_women(df::DataFrame)
         FilterStep(
             "educ, urban, and marst",
             df -> filter(
-                row -> !ismissing(row.edu5) && !ismissing(row.marst) && !ismissing(row.urban), df
+                row -> !ismissing(row.edu4) && !ismissing(row.marst) && !ismissing(row.urban), df
             ),
             "Missing respondent's education, urban, or marital status"
         ),
         FilterStep(
             "edu_sp",
             df -> filter(
-                row -> !(row.marst == "married" && ismissing(row.edu5_sp)), df
+                row -> !(row.marst == "married" && ismissing(row.edu4_sp)), df
             ),
             "Missing spousal education when married"
         )
@@ -156,14 +156,14 @@ function restrict_sample_men(df::DataFrame)
         FilterStep(
             "educ, urban, and marst",
             df -> filter(
-                row -> !ismissing(row.edu5) && !ismissing(row.marst) && !ismissing(row.urban), df
+                row -> !ismissing(row.edu4) && !ismissing(row.marst) && !ismissing(row.urban), df
             ),
             "Missing respondent's education, urban, or marital status"
         ),
         FilterStep(
             "edu_sp",
             df -> filter(
-                row -> !(row.marst == "married" && ismissing(row.edu5_sp)), df
+                row -> !(row.marst == "married" && ismissing(row.edu4_sp)), df
             ),
             "Missing spousal education when married"
         )

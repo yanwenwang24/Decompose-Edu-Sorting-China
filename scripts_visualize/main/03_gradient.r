@@ -100,7 +100,7 @@ gradient_plt <- gradient_pooled_plt / gradient_by_urban_plt
 
 # Save the plot
 ggsave(
-  "outputs/graphs/gradient.png",
+  "outputs/graphs/main/gradient.png",
   gradient_plt,
   width = 8,
   height = 12,

@@ -129,7 +129,7 @@ odds_ratio_plt <- odds_ratio_pooled_plt / odds_ratio_by_urban_plt
 
 # Save the plot
 ggsave(
-  "outputs/graphs/odds_ratio.png",
+  "outputs/graphs/main/odds_ratio.png",
   odds_ratio_plt,
   width = 8,
   height = 12,

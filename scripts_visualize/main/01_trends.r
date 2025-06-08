@@ -78,7 +78,7 @@ trends_plt <- trends_pooled_plt + trends_by_urban_plt
 
 # Save the plot
 ggsave(
-  "outputs/graphs/trends.png",
+  "outputs/graphs/main/trends.png",
   trends_plt,
   width = 10,
   height = 10,

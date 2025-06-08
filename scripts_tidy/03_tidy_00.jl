@@ -61,6 +61,7 @@ census_2000 = @chain census_2000 begin
     @transform(:age = ifelse.(:age .== 999, missing, :age))
     @transform(:birthy = :year - :age)
     @transform(:marst = get.(Ref(marst_dict), :marst, missing))
+    @transform(:maryr = ifelse.(:marryr .>= 2020, missing, :marryr))
 end
 
 # Hukou status
@@ -170,6 +171,7 @@ select!(
     :age,
     :birthy,
     :marst,
+    :maryr,
     :hukou,
     :edu7,
     :edu6,
@@ -189,6 +191,7 @@ df = @select(
     :age,
     :birthy,
     :hukou,
+    :maryr,
     :edu7,
     :edu6,
     :edu5,
@@ -209,6 +212,7 @@ sp_df = leftjoin(
     :age_sp,
     :birthy_sp,
     :hukou_sp,
+    :maryr_sp,
     :edu7_sp,
     :edu6_sp,
     :edu5_sp,
@@ -227,6 +231,8 @@ leftjoin!(census_2000, sp_df, on=[:hhid, :pernum])
     :birthy_f = ifelse.(:female .== 0, :birthy_sp, :birthy),
     :hukou_m = ifelse.(:female .== 0, :hukou, :hukou_sp),
     :hukou_f = ifelse.(:female .== 0, :hukou_sp, :hukou),
+    :maryr_m = ifelse.(:female .== 0, :maryr, :maryr_sp),
+    :maryr_f = ifelse.(:female .== 0, :maryr_sp, :maryr),
     :edu7_m = ifelse.(:female .== 0, :edu7, :edu7_sp),
     :edu7_f = ifelse.(:female .== 0, :edu7_sp, :edu7),
     :edu6_m = ifelse.(:female .== 0, :edu6, :edu6_sp),

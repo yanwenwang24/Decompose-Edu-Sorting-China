@@ -16,7 +16,6 @@
 # Load packages -----------------------------------------------------------
 
 library(arrow)
-library(glm)
 library(marginaleffects)
 library(tidyverse)
 

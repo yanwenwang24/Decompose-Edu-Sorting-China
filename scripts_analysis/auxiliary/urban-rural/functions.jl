@@ -43,7 +43,7 @@ Apply a series of filtering steps to restrict the sample for women based on pred
 Applies sequential filters for:
 1. Gender (female only)
 2. Age (25-34 for 2000 and 2010)
-3. Non-missing education, urban, and marital status
+3. Non-missing education, marital status, and urban status at marriage
 4. Non-missing and mataching urban status at marriage (self and spouse) when married
 
 Prints progress information for each filtering step.
@@ -71,14 +71,14 @@ function restrict_sample_women(df::DataFrame)
             "Filter by age based on year: 2000/2010 (25-34)"
         ),
         FilterStep(
-            "educ, urban, and marst",
+            "educ, marital status, and urban status at marriage",
             df -> filter(
                 row -> !ismissing(row.edu5) &&
                            !ismissing(row.marst) &&
-                           !ismissing(row.urban),
+                           !ismissing(row.marurban),
                 df
             ),
-            "Missing respondent's education, urban, or marital status"
+            "Missing respondent's education, marital status, or urban status at marriage"
         ),
         FilterStep(
             "edu_sp",
@@ -165,8 +165,8 @@ Apply a series of filtering steps to restrict the sample for men based on predef
 Applies sequential filters for:
 1. Gender (male only)
 2. Age (27-36 for 2000 and 2010)
-3. Non-missing education, urban, and marital status
-4. Non-missing and mataching urban status at marriage (self and spouse) when married
+3. Non-missing education, marital status, and urban status at marriage
+4. Non-missing and matching urban status at marriage (self and spouse) when married
 
 Prints progress information for each filtering step.
 """
@@ -193,12 +193,14 @@ function restrict_sample_men(df::DataFrame)
             "Filter by age based on year: 2000/2010 (27-36)"
         ),
         FilterStep(
-            "educ, urban, and marst",
+            "educ, marital status, and urban status at marriage",
             df -> filter(
-                row -> !ismissing(row.edu5) && !ismissing(row.marst) && !ismissing(row.urban),
+                row -> !ismissing(row.edu5) &&
+                           !ismissing(row.marst) &&
+                           !ismissing(row.marurban),
                 df
             ),
-            "Missing respondent's education, urban, or marital status"
+            "Missing respondent's education, marital status, or urban status at marriage"
         ),
         FilterStep(
             "edu_sp",

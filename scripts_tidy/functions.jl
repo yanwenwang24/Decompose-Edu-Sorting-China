@@ -167,28 +167,26 @@ function get_move_year(migyr_code::Union{Int,Float64,Missing})
 end
 
 """
-    determine_mar_urban_2000(migyr, typeprev, maryr, urban)
-Determines if a marriage was formed in an urban (1) or rural (0) context.
-Returns `missing` if the context cannot be determined.
+    determine_urban_2000(peak_yr, migyr_code, typeprev, current_urban) -> Union{Int, Missing}
+A single, universal function to determine the urban context based on a peak year.
 """
-function determine_mar_urban_2000(migyr, typeprev, maryr, urban)
-    # If marriage year or current context is missing, we cannot proceed.
-    (ismissing(maryr) || ismissing(urban)) && return missing
+function determine_urban_2000(peak_yr, migyr_code, typeprev, current_urban)
+    # If any essential piece is missing, we cannot proceed.
+    (ismissing(peak_yr) || ismissing(current_urban)) && return missing
 
-    Y_move = get_move_year(migyr)
+    Y_move = get_move_year(migyr_code)
     ismissing(Y_move) && return missing
 
-    # Case 1: Married AFTER moving to current location, or NEVER moved.
-    # The context of marriage is the CURRENT residence.
-    if maryr >= Y_move
-        return urban
+    # Case 1: Relevant year is AFTER or DURING the move (or never moved).
+    # Context is the CURRENT residence.
+    if peak_yr >= Y_move
+        return current_urban
 
-        # Case 2: Married BEFORE moving to current location.
-        # The context of marriage is the PREVIOUS residence.
-    else # marryr < Y_move
-        # For this case, we rely on `typeprev`.
-        # If the move was before Nov 1995 (migyr=2), `typeprev` is NIU (9), 
-        # so `classify_urban` will correctly return `missing`.
+        # Case 2: Relevant year is BEFORE the move.
+        # Context is the PREVIOUS residence.
+    else # peak_yr < Y_move
+        # This will correctly return missing if `typeprev` is NIU (9) or Unknown (8),
+        # especially for moves before Nov 1995 (migyr=2).
         return classify_urban(typeprev)
     end
 end
@@ -215,31 +213,28 @@ function get_years_away(code::Union{Int,Float64,Missing})
 end
 
 """
-    determine_mar_urban_2010(census_year, maryr, current_urban, time_away_code, hukou_type)
-The main function to determine marriage context for the 2010 data.
+    determine_urban_2010(census_year, peak_yr, current_urban, time_away_code, hukou_type) -> Union{Int, Missing}
+A single, universal function for the 2010 census data.
 """
-function determine_mar_urban_2010(census_year, maryr, current_urban, time_away_code, hukou_type)
-    # If key information is missing, we cannot determine the context.
-    (ismissing(maryr) || ismissing(current_urban) || ismissing(time_away_code)) && return missing
+function determine_urban_2010(census_year, peak_yr, current_urban, time_away_code, hukou_type)
+    # Check for missing essential data
+    (ismissing(peak_yr) || ismissing(current_urban) || ismissing(time_away_code)) && return missing
 
-    # Case 1: Never left hukou location. Context is current residence.
+    # Case 1: Never left hukou location. Context is always the current residence.
     if time_away_code == 1
         return current_urban
     end
 
-    # For all others, estimate the year they left their hukou location
+    # Estimate the year of departure from hukou location
     years_away = get_years_away(time_away_code)
     ismissing(years_away) && return missing
-
-    # We use a conservative estimate for the year of departure.
-    # A duration of 2 years means they left sometime between 2008-2009. 
-    # So Y_left_hukou is approximately (2010 - 2) = 2008.
     Y_left_hukou = census_year - years_away
 
-    # Case 2: Married AFTER or around the time of leaving. Context is current residence.
-    if maryr >= Y_left_hukou
+    # Case 2: Peak year is AFTER or DURING departure. Context is current residence.
+    if peak_yr >= Y_left_hukou
         return current_urban
-    else # Case 3: Married BEFORE leaving. Context is the hukou location. (marryr < Y_left_hukou)
+        # Case 3: Peak year is BEFORE departure. Context is the hukou location.
+    else # peak_yr < Y_left_hukou
         return classify_urban(hukou_type)
     end
 end

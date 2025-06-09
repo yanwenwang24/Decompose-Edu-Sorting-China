@@ -18,6 +18,7 @@ using DataFrames
 using DataFramesMeta
 using FreqTables
 using Parquet
+using Statistics
 using XLSX
 
 # Load dictionaries and functions

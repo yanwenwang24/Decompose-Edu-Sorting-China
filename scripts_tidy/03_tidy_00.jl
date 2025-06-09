@@ -78,6 +78,16 @@ census_2000 = @chain census_2000 begin
     )
 end
 
+# Migration status
+census_2000 = @chain census_2000 begin
+    @rtransform :marurban = determine_mar_urban_2000(
+        :cn2000a_migyr, 
+        :cn2000a_typeprev, 
+        :maryr, 
+        :urban
+    )
+end
+
 # Education
 census_2000 = @chain census_2000 begin
     @transform(
@@ -172,6 +182,7 @@ select!(
     :birthy,
     :marst,
     :maryr,
+    :marurban,
     :hukou,
     :edu7,
     :edu6,
@@ -192,6 +203,7 @@ df = @select(
     :birthy,
     :hukou,
     :maryr,
+    :marurban,
     :edu7,
     :edu6,
     :edu5,
@@ -213,6 +225,7 @@ sp_df = leftjoin(
     :birthy_sp,
     :hukou_sp,
     :maryr_sp,
+    :marurban_sp,
     :edu7_sp,
     :edu6_sp,
     :edu5_sp,
@@ -233,6 +246,8 @@ leftjoin!(census_2000, sp_df, on=[:hhid, :pernum])
     :hukou_f = ifelse.(:female .== 0, :hukou_sp, :hukou),
     :maryr_m = ifelse.(:female .== 0, :maryr, :maryr_sp),
     :maryr_f = ifelse.(:female .== 0, :maryr_sp, :maryr),
+    :marurban_m = ifelse.(:female .== 0, :marurban, :marurban_sp),
+    :marurban_f = ifelse.(:female .== 0, :marurban_sp, :marurban),
     :edu7_m = ifelse.(:female .== 0, :edu7, :edu7_sp),
     :edu7_f = ifelse.(:female .== 0, :edu7_sp, :edu7),
     :edu6_m = ifelse.(:female .== 0, :edu6, :edu6_sp),

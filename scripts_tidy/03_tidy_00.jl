@@ -78,12 +78,30 @@ census_2000 = @chain census_2000 begin
     )
 end
 
-# Migration status
+# Urban/rural status at the time of first marriage
+# --- Step 1: impuate peak marriae year for those missing `maryr` ---
+census_2000.cohort = floor.(census_2000.birthy / 5) * 5
+
+cohort_mar_stats = @chain census_2000 begin
+    @rsubset !ismissing(:maryr)
+    @by(
+        [:female, :cohort],
+        :median_maryr = round(Int, median(:maryr))
+    )
+end
+
+leftjoin!(census_2000, cohort_mar_stats, on = [:female, :cohort])
+
 census_2000 = @chain census_2000 begin
-    @rtransform :marurban = determine_mar_urban_2000(
-        :cn2000a_migyr, 
-        :cn2000a_typeprev, 
-        :maryr, 
+    @transform(:peak_mar_yr = coalesce.(:maryr, :median_maryr))
+end
+
+# --- Step 2: determine urban/rural status at the time of first marriage ---
+census_2000 = @chain census_2000 begin
+    @rtransform :marurban = determine_urban_2000(
+        :peak_mar_yr,
+        :cn2000a_migyr,
+        :cn2000a_typeprev,
         :urban
     )
 end

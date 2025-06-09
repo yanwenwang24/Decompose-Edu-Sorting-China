@@ -133,3 +133,113 @@ function create_children_matches(sdf)
     end
     return matches
 end
+
+# Migration status in the 2000 census -------------------------------------
+
+"""
+    classify_urban(residence_type_code)
+Classifies a residence type code as urban (1), rural (0), or missing.
+This works for BOTH current_res_type and cn2000a_typeprev.
+"""
+function classify_urban(residence_type_code::Union{Int,Float64,Missing})
+    # Urban: Residents' committee in town, Neighborhood in city
+    residence_type_code in (2, 4) && return 2
+    # Rural: Township, Village's committee in town
+    residence_type_code in (1, 3) && return 1
+    # Unknown or NIU
+    return missing
+end
+
+"""
+    get_move_year(migyr_code)
+Converts the categorical migration year code from the 2000 census to a numerical year.
+Returns `missing` if the code is invalid.
+"""
+function get_move_year(migyr_code::Union{Int,Float64,Missing})
+    migyr_code == 1 && return 0       # "Since birth", effectively always lived here.
+    migyr_code in (2, 3) && return 1995
+    migyr_code == 4 && return 1996
+    migyr_code == 5 && return 1997
+    migyr_code == 6 && return 1998
+    migyr_code == 7 && return 1999
+    migyr_code == 8 && return 2000
+    return missing # Should not happen with clean data
+end
+
+"""
+    determine_mar_urban_2000(migyr, typeprev, maryr, urban)
+Determines if a marriage was formed in an urban (1) or rural (0) context.
+Returns `missing` if the context cannot be determined.
+"""
+function determine_mar_urban_2000(migyr, typeprev, maryr, urban)
+    # If marriage year or current context is missing, we cannot proceed.
+    (ismissing(maryr) || ismissing(urban)) && return missing
+
+    Y_move = get_move_year(migyr)
+    ismissing(Y_move) && return missing
+
+    # Case 1: Married AFTER moving to current location, or NEVER moved.
+    # The context of marriage is the CURRENT residence.
+    if maryr >= Y_move
+        return urban
+
+        # Case 2: Married BEFORE moving to current location.
+        # The context of marriage is the PREVIOUS residence.
+    else # marryr < Y_move
+        # For this case, we rely on `typeprev`.
+        # If the move was before Nov 1995 (migyr=2), `typeprev` is NIU (9), 
+        # so `classify_urban` will correctly return `missing`.
+        return classify_urban(typeprev)
+    end
+end
+
+# Migration status in the 2010 census -------------------------------------
+
+"""
+    get_years_away(code)
+Converts the '离开户口登记地时间' code to a numerical duration in years.
+We use the upper bound of the interval for a conservative estimate of the move year.
+(e.g., "1-2 years" away means they left at most 2 years ago).
+"""
+function get_years_away(code::Union{Int,Float64,Missing})
+    code == 1 && return 0.0  # Never left
+    code == 2 && return 0.5
+    code == 3 && return 1.0
+    code == 4 && return 2.0
+    code == 5 && return 3.0
+    code == 6 && return 4.0
+    code == 7 && return 5.0
+    code == 8 && return 6.0
+    code == 9 && return 6.0  # "6 years or more", we use 6 as the minimum duration
+    return missing
+end
+
+"""
+    determine_mar_urban_2010(census_year, maryr, current_urban, time_away_code, hukou_type)
+The main function to determine marriage context for the 2010 data.
+"""
+function determine_mar_urban_2010(census_year, maryr, current_urban, time_away_code, hukou_type)
+    # If key information is missing, we cannot determine the context.
+    (ismissing(maryr) || ismissing(current_urban) || ismissing(time_away_code)) && return missing
+
+    # Case 1: Never left hukou location. Context is current residence.
+    if time_away_code == 1
+        return current_urban
+    end
+
+    # For all others, estimate the year they left their hukou location
+    years_away = get_years_away(time_away_code)
+    ismissing(years_away) && return missing
+
+    # We use a conservative estimate for the year of departure.
+    # A duration of 2 years means they left sometime between 2008-2009. 
+    # So Y_left_hukou is approximately (2010 - 2) = 2008.
+    Y_left_hukou = census_year - years_away
+
+    # Case 2: Married AFTER or around the time of leaving. Context is current residence.
+    if maryr >= Y_left_hukou
+        return current_urban
+    else # Case 3: Married BEFORE leaving. Context is the hukou location. (marryr < Y_left_hukou)
+        return classify_urban(hukou_type)
+    end
+end

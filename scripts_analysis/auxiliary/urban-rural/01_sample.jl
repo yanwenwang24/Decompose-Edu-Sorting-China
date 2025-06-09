@@ -26,6 +26,11 @@ cohort_ranges = (1966:5:1981) .=> [string(y,"s") for y in 65:5:80]
 ## Assign and categorize cohorts
 transform!(sample_women, :birthy => ByRow(assign_cohort) => :cohort)
 
+# Recode urban status (prioritize urban status at marriage)
+sample_women = @chain sample_women begin
+    @transform(:urban = coalesce.(:marurban, :urban))
+end
+
 # Sample of married women (main sample for analysis)
 sample_women_married = @subset(sample_women, :marst .== "married")
 
@@ -40,6 +45,11 @@ cohort_ranges = (1964:5:1983) .=> [string(y,"s") for y in 65:5:80]
 
 ## Assign and categorize cohorts
 transform!(sample_men, :birthy => ByRow(assign_cohort) => :cohort)
+
+# Recode urban status (prioritize urban status at marriage)
+sample_men = @chain sample_men begin
+    @transform(:urban = coalesce.(:marurban, :urban))
+end
 
 # 2 Save samples ----------------------------------------------------------
 

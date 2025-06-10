@@ -401,33 +401,51 @@ function extract_components(df::DataFrame)
 
     # Fill marriage table and margins
     for row in eachrow(df)
+        val = coalesce(row.n, 0.0)
+
         if row.edu5_f ≤ max_edu && row.edu5_m ≤ max_edu
-            full_matrix[row.edu5_f, row.edu5_m] = row.n
+            full_matrix[row.edu5_f, row.edu5_m] = val
         elseif row.edu5_m == max_edu + 1 && row.edu5_f ≤ max_edu
-            full_matrix[row.edu5_f, end] = row.n
+            full_matrix[row.edu5_f, end] = val
         elseif row.edu5_f == max_edu + 1 && row.edu5_m ≤ max_edu
-            full_matrix[end, row.edu5_m] = row.n
+            full_matrix[end, row.edu5_m] = val
         end
     end
 
     # Standardize components separately
     marriage_sum = sum(@view full_matrix[1:max_edu, 1:max_edu])
 
+    # Handle potential zero sums in margins to avoid division by zero -> NaN
+    f_margin_sum = sum(full_matrix[1:max_edu, end])
+    m_margin_sum = sum(full_matrix[end, 1:max_edu])
+
     # Create margins
-    f_totals = full_matrix[1:max_edu, end] ./ sum(full_matrix[1:max_edu, end])
-    m_totals = full_matrix[end, 1:max_edu] ./ sum(full_matrix[end, 1:max_edu])
+    f_totals = f_margin_sum > 0 ? (full_matrix[1:max_edu, end] ./ f_margin_sum) : zeros(Float64, max_edu)
+    m_totals = m_margin_sum > 0 ? (full_matrix[end, 1:max_edu] ./ m_margin_sum) : zeros(Float64, max_edu)
     margins = (f_totals, m_totals)
 
     # Calculate marriage gradients
     f_married = vec(sum(full_matrix[1:max_edu, 1:max_edu], dims=2))
     m_married = vec(sum(full_matrix[1:max_edu, 1:max_edu], dims=1))
-    weights = (f_married ./ full_matrix[1:max_edu, end]) .*
-              (m_married ./ full_matrix[end, 1:max_edu])'
-    weights ./= sum(weights)
+
+    # Protect against division by zero if an entire education level has no unmarried people
+    unmarried_f = full_matrix[1:max_edu, end]
+    unmarried_m = full_matrix[end, 1:max_edu]
+
+    f_ratio = [unmarried_f[i] > 0 ? f_married[i] / unmarried_f[i] : 0.0 for i in 1:max_edu]
+    m_ratio = [unmarried_m[i] > 0 ? m_married[i] / unmarried_m[i] : 0.0 for i in 1:max_edu]
+
+    weights = (f_ratio .* m_ratio')
+    weights_sum = sum(weights)
+    weights = weights_sum > 0 ? weights ./ weights_sum : weights # Avoid NaN if sum is 0
 
     # Calculate assortative mating pattern using odds ratios
+    pseudo_count = 1e-6
+    marriage_table = full_matrix[1:max_edu, 1:max_edu] ./ marriage_sum .+ pseudo_count
+
+    marriage_table = marriage_table ./ sum(marriage_table)
+
     pattern = ones(max_edu, max_edu)
-    marriage_table = full_matrix[1:max_edu, 1:max_edu] ./ marriage_sum
     for r in 2:max_edu, c in 2:max_edu
         pattern[r, c] = (marriage_table[r, c] / marriage_table[r, 1]) *
                         (marriage_table[1, 1] / marriage_table[1, c])

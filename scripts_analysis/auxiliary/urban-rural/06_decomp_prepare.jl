@@ -72,6 +72,7 @@ end
 
 leftjoin!(df, count_df, on=["cohort", "edu5_f", "edu5_m"])
 sort!(df, [:cohort, :edu5_f, :edu5_m])
+df.n = float.(df.n)
 
 # Compute number of unmarried men at each educational level (counterfactual)
 men_unmarried = @chain count_df begin
@@ -88,13 +89,17 @@ men_unmarried = @chain men_unmarried begin
     @select(:cohort, :edu5_m, :men_unmarried)
 end
 
-# Merge number of unmarried men to the contingency table
-leftjoin!(df, men_unmarried, on=[:cohort, :edu5_m])
-df[!, :n] = coalesce.(df.n, df.men_unmarried)
+# Merge number of unmarried men to the contingency table  (edu5_m = 6)
+leftjoin!(df, women_unmarried, on=[:cohort, :edu5_f])
+rows_for_women = (df.edu5_m .== 6)
+df[rows_for_women, :n] = coalesce.(df[rows_for_women, :n], df[rows_for_women, :women_unmarried])
+select!(df, Not(:women_unmarried))
 
 # Merge number of unmarried women to the contingency table
-leftjoin!(df, women_unmarried, on=[:cohort, :edu5_f])
-df[!, :n] = coalesce.(df.n, df.women_unmarried)
+leftjoin!(df, men_unmarried, on=[:cohort, :edu5_m])
+rows_for_men = (df.edu5_f .== 6)
+df[rows_for_men, :n] = coalesce.(df[rows_for_men, :n], df[rows_for_men, :men_unmarried])
+select!(df, Not(:men_unmarried))
 
 select!(df, :cohort, :edu5_f, :edu5_m, :n)
 
@@ -185,6 +190,7 @@ end
 
 leftjoin!(df, count_df, on=["cohort", "edu5_f", "edu5_m"])
 sort!(df, [:cohort, :edu5_f, :edu5_m])
+df.n = float.(df.n)
 
 # Compute number of unmarried men at each educational level (counterfactual)
 men_unmarried = @chain count_df begin
@@ -201,13 +207,17 @@ men_unmarried = @chain men_unmarried begin
     @select(:cohort, :edu5_m, :men_unmarried)
 end
 
-# Merge number of unmarried men to the contingency table
-leftjoin!(df, men_unmarried, on=[:cohort, :edu5_m])
-df[!, :n] = coalesce.(df.n, df.men_unmarried)
+# Merge number of unmarried men to the contingency table  (edu5_m = 6)
+leftjoin!(df, women_unmarried, on=[:cohort, :edu5_f])
+rows_for_women = (df.edu5_m .== 6)
+df[rows_for_women, :n] = coalesce.(df[rows_for_women, :n], df[rows_for_women, :women_unmarried])
+select!(df, Not(:women_unmarried))
 
 # Merge number of unmarried women to the contingency table
-leftjoin!(df, women_unmarried, on=[:cohort, :edu5_f])
-df[!, :n] = coalesce.(df.n, df.women_unmarried)
+leftjoin!(df, men_unmarried, on=[:cohort, :edu5_m])
+rows_for_men = (df.edu5_f .== 6)
+df[rows_for_men, :n] = coalesce.(df[rows_for_men, :n], df[rows_for_men, :men_unmarried])
+select!(df, Not(:men_unmarried))
 
 select!(df, :cohort, :edu5_f, :edu5_m, :n)
 

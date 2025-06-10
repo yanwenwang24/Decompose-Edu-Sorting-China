@@ -457,7 +457,7 @@ function reconstruct(components::ComponentSet)
     initial_matrix = copy(components.pattern)
 
     # Apply IPF
-    factors = ipf(initial_matrix, [f_married_norm, m_married_norm])
+    factors = ipf(initial_matrix, [f_married_norm, m_married_norm], maxiter=10000, tol=1e-6)
 
     # Create final matrix
     reconstructed = Array(factors) .* initial_matrix
@@ -587,9 +587,8 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
     # Storage for bootstrap results
     bootstrap_results = Vector{Dict{Symbol,Dict{String,Float64}}}(undef, n_bootstrap)
 
-    # Get the initial group values that correspond to comp1 and comp2
-    group_val1 = group_vals[1]  # Value for comp1
-    group_val2 = group_vals[end]  # Value for comp2
+    # Define the small constant to add for numerical stability
+    pseudo_count = 1e-6
 
     # Perform bootstrap iterations
     for b in 1:n_bootstrap
@@ -600,6 +599,10 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
         boot_group2 = copy(group2_orig)
         boot_group2.n = rand(Distributions.Multinomial(n_total2, probs2))
 
+        # Ensure no zero counts by adding a small constant
+        boot_group1.n = Float64.(boot_group1.n) .+ pseudo_count
+        boot_group2.n = Float64.(boot_group2.n) .+ pseudo_count
+
         boot_comp1 = extract_components(boot_group1)
         boot_comp2 = extract_components(boot_group2)
 
@@ -607,7 +610,7 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
         bootstrap_results[b] = decompose_differences(boot_comp1, boot_comp2).contributions
     end
 
-    # Calculate bootstrap statistics with proper handling of invalid results
+    # Calculate bootstrap statistics
     results = Dict{Symbol,Dict{String,NamedTuple}}()
 
     for pattern in [:homogamy, :hypergamy, :hypogamy]

@@ -40,8 +40,7 @@ trends_pooled_plt <- trends_pooled %>%
   scale_y_continuous(labels = scales::percent) +
   scale_color_manual(
     values = c(
-      "#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe",
-      "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"
+      "#fd7f6f", "#7eb0d5", "#b2e061"
     )
   ) +
   labs(
@@ -65,8 +64,7 @@ trends_by_urban_plt <- trends_by_urban %>%
   scale_y_continuous(labels = scales::percent) +
   scale_color_manual(
     values = c(
-      "#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe",
-      "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"
+      "#fd7f6f", "#7eb0d5", "#b2e061"
     )
   ) +
   labs(

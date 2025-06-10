@@ -75,15 +75,22 @@ edu_comp_pooled_plt <- ggplot(
 ) +
   geom_bar(position = "fill", stat = "identity") +
   geom_text(
-    aes(label = label),
+    aes(
+      label = label,
+      # Conditionally map color based on Education level
+      color = Education %in% c("Secondary", "Some college", "College or above"),
+    ),
     position = position_fill(vjust = 0.5),
-    size = 3
+    size = 3,
+    show.legend = FALSE
   ) +
   scale_fill_manual(
     values = c(
-      "#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe",
-      "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"
+      "#bae6ff", "#33b1ff", "#0072c3", "#003a6d", "#1c0f30"
     )
+  ) +
+  scale_color_manual(
+    values = c("TRUE" = "white", "FALSE" = "black")
   ) +
   scale_y_continuous(labels = scales::percent) +
   labs(
@@ -99,16 +106,23 @@ edu_comp_by_urban_plt <- edu_comp_by_urban %>%
   ggplot(aes(x = cohort, y = value, fill = Education)) +
   geom_bar(position = "fill", stat = "identity") +
   geom_text(
-    aes(label = label),
+    aes(
+      label = label,
+      # Conditionally map color based on Education level
+      color = Education %in% c("Secondary", "Some college", "College or above"),
+    ),
     position = position_fill(vjust = 0.5),
-    size = 3
+    size = 3,
+    show.legend = FALSE
   ) +
   scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(
     values = c(
-      "#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe",
-      "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"
+      "#bae6ff", "#33b1ff", "#0072c3", "#003a6d", "#1c0f30"
     )
+  ) +
+  scale_color_manual(
+    values = c("TRUE" = "white", "FALSE" = "black")
   ) +
   labs(
     title = "",

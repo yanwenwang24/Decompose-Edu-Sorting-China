@@ -286,7 +286,7 @@ by_edu_df <- bind_rows(
 ) %>%
   # Remove rank deficient
   filter(
-    !(term == "hyper" & edu5_f == 4),
+    !(term == "hyper" & edu5_f == 5),
     !(term == "hypo" & edu5_f == 1)
   ) %>%
   rename(edu = edu5_f)

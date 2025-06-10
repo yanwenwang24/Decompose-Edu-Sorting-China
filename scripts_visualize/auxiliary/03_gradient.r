@@ -69,8 +69,7 @@ gradient_pooled_plt <- ggplot(
   geom_smooth(span = 0.8, se = FALSE) +
   scale_color_manual(
     values = c(
-      "#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe",
-      "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"
+      "#bae6ff", "#33b1ff", "#0072c3", "#003a6d", "#1c0f30"
     )
   ) +
   labs(
@@ -89,8 +88,7 @@ gradient_by_urban_plt <- ggplot(
   geom_smooth(span = 0.8, se = FALSE) +
   scale_color_manual(
     values = c(
-      "#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe",
-      "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"
+      "#bae6ff", "#33b1ff", "#0072c3", "#003a6d", "#1c0f30"
     )
   ) +
   labs(

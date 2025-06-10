@@ -66,11 +66,11 @@ odds_ratio_pooled_plt <- odds_ratio_pooled %>%
   scale_y_continuous(breaks = seq(-10, 10, by = 1)) +
   scale_color_manual(
     values = c(
-      "Primary or less" = "#fd7f6f",
-      "Middle" = "#7eb0d5",
-      "Secondary" = "#b2e061",
-      "Some college" = "#bd7ebe",
-      "College or above" = "#ffb55a",
+      "Primary or less" = "#bae6ff",
+      "Middle" = "#33b1ff",
+      "Secondary" = "#0072c3",
+      "Some college" = "#003a6d",
+      "College or above" = "#1c0f30",
       "Aggregated" = "grey"
     ),
     name = "Education"
@@ -106,11 +106,11 @@ odds_ratio_by_urban_plt <- odds_ratio_by_urban %>%
   scale_y_continuous(breaks = seq(-10, 10, by = 1)) +
   scale_color_manual(
     values = c(
-      "Primary or less" = "#fd7f6f",
-      "Middle" = "#7eb0d5",
-      "Secondary" = "#b2e061",
-      "Some college" = "#bd7ebe",
-      "College or above" = "#ffb55a",
+      "Primary or less" = "#bae6ff",
+      "Middle" = "#33b1ff",
+      "Secondary" = "#0072c3",
+      "Some college" = "#003a6d",
+      "College or above" = "#1c0f30",
       "Aggregated" = "grey"
     ),
     name = "Education"

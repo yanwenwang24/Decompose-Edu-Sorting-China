@@ -75,10 +75,10 @@ decomp_pooled_plt <- decomp_pooled %>%
   ) +
   labs(
     y = "",
-    x = "Cohort"
+    x = ""
   ) +
-  theme(legend.position = "none") +
-  facet_grid(~pattern)
+  facet_grid(~pattern) +
+  theme(legend.position = "none")
 
 # By urban
 decomp_by_urban_plt <- decomp_by_urban %>%
@@ -92,13 +92,12 @@ decomp_by_urban_plt <- decomp_by_urban %>%
   ) +
   labs(
     y = "",
-    x = "Cohort"
+    x = ""
   ) +
   facet_wrap(~pattern, nrow = 1) +
-  theme_bw() +
   theme(
-    legend.title = element_blank(),
-    legend.position = "bottom"
+    legend.position = "bottom",
+    legend.title = element_blank()
   )
 
 decomp_plt <- decomp_pooled_plt / decomp_by_urban_plt

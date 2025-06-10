@@ -14,10 +14,11 @@
 
 # Load the required packages
 library(arrow)
+library(ggthemes)
 library(tidyverse)
 library(patchwork)
 
-theme_set(theme_bw())
+theme_set(theme_hc())
 
 # Source scripts
 source("scripts_visualize/main/01_trends.r")

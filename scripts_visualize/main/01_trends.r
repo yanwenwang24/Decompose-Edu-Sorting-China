@@ -18,6 +18,8 @@ trends_pooled <- read_parquet("outputs/tables/pooled/trends.parquet")
 trends_by_urban <- read_parquet("outputs/tables/urban-rural/trends.parquet")
 
 # Recode urban
+trends_pooled$urban <- "Pooled"
+
 trends_by_urban$urban <- ifelse(
   trends_by_urban$urban == 1, "Rural", "Urban"
 )
@@ -35,7 +37,11 @@ trends_pooled_plt <- trends_pooled %>%
       by = 5
     )
   ) +
-  scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, 0.82),       # Set a common y-axis range
+    breaks = seq(0, 0.8, by = 0.2)
+  ) +
   scale_color_manual(
     values = c(
       "#fd7f6f", "#7eb0d5", "#b2e061"
@@ -46,6 +52,7 @@ trends_pooled_plt <- trends_pooled %>%
     x = "Cohort",
     y = ""
   ) +
+  facet_grid(~urban) +
   theme(legend.position = "none")
 
 # Trends by urban
@@ -59,7 +66,11 @@ trends_by_urban_plt <- trends_by_urban %>%
       by = 5
     )
   ) +
-  scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, 0.82),       # Set a common y-axis range
+    breaks = seq(0, 0.8, by = 0.2)
+  ) +
   scale_color_manual(
     values = c(
       "#fd7f6f", "#7eb0d5", "#b2e061"
@@ -70,7 +81,8 @@ trends_by_urban_plt <- trends_by_urban %>%
     x = "Cohort",
     y = "",
   ) +
-  facet_grid(~urban)
+  facet_grid(~urban) +
+  theme(legend.position = "right")
 
 trends_plt <- trends_pooled_plt + trends_by_urban_plt
 

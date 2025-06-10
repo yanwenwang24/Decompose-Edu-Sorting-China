@@ -76,7 +76,7 @@ edu_comp_pooled_plt <- ggplot(
   geom_bar(position = "fill", stat = "identity") +
   geom_text(
     aes(
-      label = label,
+      label = ifelse(value > 0.025, label, ""),
       # Conditionally map color based on Education level
       color = Education %in% c("Secondary", "Some college", "College or above"),
     ),
@@ -92,10 +92,14 @@ edu_comp_pooled_plt <- ggplot(
   scale_color_manual(
     values = c("TRUE" = "white", "FALSE" = "black")
   ) +
-  scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, 1),       # Set a common y-axis range
+    breaks = seq(0, 1, by = 1)
+  ) +
   labs(
     title = "",
-    x = "Cohort",
+    x = "",
     y = ""
   ) +
   theme(legend.position = "none") +
@@ -107,7 +111,7 @@ edu_comp_by_urban_plt <- edu_comp_by_urban %>%
   geom_bar(position = "fill", stat = "identity") +
   geom_text(
     aes(
-      label = label,
+      label = ifelse(value > 0.025, label, ""),
       # Conditionally map color based on Education level
       color = Education %in% c("Secondary", "Some college", "College or above"),
     ),
@@ -115,7 +119,11 @@ edu_comp_by_urban_plt <- edu_comp_by_urban %>%
     size = 3,
     show.legend = FALSE
   ) +
-  scale_y_continuous(labels = scales::percent) +
+  scale_y_continuous(
+    labels = scales::percent,
+    limits = c(0, 1),       # Set a common y-axis range
+    breaks = seq(0, 1, by = 1)
+  ) +
   scale_fill_manual(
     values = c(
       "#bae6ff", "#33b1ff", "#0072c3", "#003a6d", "#1c0f30"
@@ -126,10 +134,9 @@ edu_comp_by_urban_plt <- edu_comp_by_urban %>%
   ) +
   labs(
     title = "",
-    x = "Cohort",
+    x = "",
     y = ""
   ) +
-  theme_bw() +
   theme(legend.position = "bottom") +
   facet_grid(~ urban + Gender)
 

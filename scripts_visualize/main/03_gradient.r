@@ -69,11 +69,14 @@ gradient_pooled_plt <- ggplot(
     )
   ) +
   labs(
-    x = "Cohort",
+    x = "",
     y = "Ratio of unmarried to married"
   ) +
-  theme(legend.position = "none") +
-  facet_grid(~Gender)
+  facet_grid(~Gender) +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(angle = 90)
+  )
 
 # By urban
 gradient_by_urban_plt <- ggplot(
@@ -88,11 +91,14 @@ gradient_by_urban_plt <- ggplot(
     )
   ) +
   labs(
-    x = "Cohort",
+    x = "",
     y = "Ratio of unmarried to married"
   ) +
-  theme(legend.position = "bottom") +
-  facet_grid(~ urban + Gender)
+  facet_grid(~ urban + Gender) +
+  theme(
+    legend.position = "bottom",
+    axis.title.y = element_text(angle = 90)
+  )
 
 gradient_plt <- gradient_pooled_plt / gradient_by_urban_plt
 

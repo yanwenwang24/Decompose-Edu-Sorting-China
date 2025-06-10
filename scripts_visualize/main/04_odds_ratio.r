@@ -81,11 +81,14 @@ odds_ratio_pooled_plt <- odds_ratio_pooled %>%
     name = "Education"
   ) +
   labs(
-    x = "Cohort",
+    x = "",
     y = "Log-odd ratios"
   ) +
-  theme(legend.position = "none") +
-  facet_grid(~term)
+  facet_grid(~term) +
+  theme(
+    legend.position = "none",
+    axis.title.y = element_text(angle = 90)
+  )
 
 # By urban
 odds_ratio_by_urban_plt <- odds_ratio_by_urban %>%
@@ -119,11 +122,14 @@ odds_ratio_by_urban_plt <- odds_ratio_by_urban %>%
     name = "Education"
   ) +
   labs(
-    x = "Cohort",
+    x = "",
     y = "Log-odd ratios"
   ) +
-  theme(legend.position = "bottom") +
-  facet_grid(~ term + urban)
+  facet_grid(~ term + urban) +
+  theme(
+    legend.position = "bottom",
+    axis.title.y = element_text(angle = 90)
+  )
 
 odds_ratio_plt <- odds_ratio_pooled_plt / odds_ratio_by_urban_plt
 

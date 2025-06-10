@@ -44,7 +44,10 @@ Applies sequential filters for:
 1. Gender (female only)
 2. Age (25-34 for 2000 and 2010)
 3. Non-missing education, marital status, and urban status at marriage
-4. Non-missing and mataching urban status at marriage (self and spouse) when married
+4. Non-missing spousal education when married
+5. Non-missing spousal urban status when married
+6. Matched urban status at marriage (self and spouse) when married
+7. First marriage for both spouses
 
 Prints progress information for each filtering step.
 """
@@ -120,6 +123,20 @@ function restrict_sample_women(df::DataFrame)
                 df
             ),
             "Marurban doesn't match spouse's for the married"
+        ),
+        FilterStep(
+            "First marriage",
+            df -> filter(
+                row -> !(
+                    row.marst == "married" && (
+                        ismissing(row.maryr) ||
+                        ismissing(row.maryr_sp) ||
+                        row.maryr != row.maryr_sp
+                    )
+                ),
+                df
+            ),
+            "One of the spouse not in first marriage"
         )
     ]
 
@@ -166,7 +183,10 @@ Applies sequential filters for:
 1. Gender (male only)
 2. Age (27-36 for 2000 and 2010)
 3. Non-missing education, marital status, and urban status at marriage
-4. Non-missing and matching urban status at marriage (self and spouse) when married
+4. Non-missing spousal education when married
+5. Non-missing spousal urban status when married
+6. Matched urban status at marriage (self and spouse) when married
+7. First marriage for both spouses
 
 Prints progress information for each filtering step.
 """
@@ -182,7 +202,7 @@ function restrict_sample_men(df::DataFrame)
                 row -> !ismissing(row.female) && row.female == 0,
                 df
             ),
-            "Filter by gender (male only)"
+            "Filter by gender (female only)"
         ),
         FilterStep(
             "age",
@@ -242,6 +262,20 @@ function restrict_sample_men(df::DataFrame)
                 df
             ),
             "Marurban doesn't match spouse's for the married"
+        ),
+        FilterStep(
+            "First marriage",
+            df -> filter(
+                row -> !(
+                    row.marst == "married" && (
+                        ismissing(row.maryr) ||
+                        ismissing(row.maryr_sp) ||
+                        row.maryr != row.maryr_sp
+                    )
+                ),
+                df
+            ),
+            "One of the spouse not in first marriage"
         )
     ]
 

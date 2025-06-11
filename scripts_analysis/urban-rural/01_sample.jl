@@ -26,9 +26,9 @@ cohort_ranges = (1966:5:1981) .=> [string(y,"s") for y in 65:5:80]
 ## Assign and categorize cohorts
 transform!(sample_women, :birthy => ByRow(assign_cohort) => :cohort)
 
-# Recode urban status (prioritize urban status at marriage)
+# Recode urban status
 sample_women = @chain sample_women begin
-    @transform(:urban = coalesce.(:marurban, :urban))
+    @transform(:urban = :marurban)
 end
 
 # Sample of married women (main sample for analysis)

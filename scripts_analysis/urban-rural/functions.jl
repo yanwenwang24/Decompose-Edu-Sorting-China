@@ -128,11 +128,12 @@ function restrict_sample_women(df::DataFrame)
             "First marriage",
             df -> filter(
                 row -> !(
-                    row.marst == "married" && (
-                        ismissing(row.maryr) ||
-                        ismissing(row.maryr_sp) ||
-                        row.maryr != row.maryr_sp
-                    )
+                    (row.year == 2010 && row.marst == "married" && (
+                         ismissing(row.maryr) ||
+                         ismissing(row.maryr_sp) ||
+                         row.maryr != row.maryr_sp
+                     )) ||
+                    (row.year == 2000 && !ismissing(row.marstd) && row.marstd == "remarried")
                 ),
                 df
             ),
@@ -267,11 +268,12 @@ function restrict_sample_men(df::DataFrame)
             "First marriage",
             df -> filter(
                 row -> !(
-                    row.marst == "married" && (
-                        ismissing(row.maryr) ||
-                        ismissing(row.maryr_sp) ||
-                        row.maryr != row.maryr_sp
-                    )
+                    (row.year == 2010 && row.marst == "married" && (
+                         ismissing(row.maryr) ||
+                         ismissing(row.maryr_sp) ||
+                         row.maryr != row.maryr_sp
+                     )) ||
+                    (row.year == 2000 && !ismissing(row.marstd) && row.marstd == "remarried")
                 ),
                 df
             ),

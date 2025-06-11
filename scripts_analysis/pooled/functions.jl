@@ -43,7 +43,7 @@ Apply a series of filtering steps to restrict the sample for women based on pred
 Applies sequential filters for:
 1. Gender (female only)
 2. Age (27-36 for 1982, 25-34 for 1990, 2000, and 2010)
-3. Non-missing education and marital status
+3. Married and never-married with non-missing education
 4. Non-missing spousal education when married
 
 Prints progress information for each filtering step.
@@ -74,9 +74,12 @@ function restrict_sample_women(df::DataFrame)
         FilterStep(
             "educ and marst",
             df -> filter(
-                row -> !ismissing(row.edu4) && !ismissing(row.marst), df
+                row -> !ismissing(row.edu4) &&
+                           !ismissing(row.marst) &&
+                           (row.marst == "married" || row.marst == "never-married"),
+                df
             ),
-            "Missing respondent's education or marital status"
+            "Missing respondent's education or marital status not married/never-married"
         ),
         FilterStep(
             "edu_sp",
@@ -129,7 +132,7 @@ Apply a series of filtering steps to restrict the sample for men based on predef
 Applies sequential filters for:
 1. Gender (male only)
 2. Age (29-38 for 1982, 27-36 for 1990, 2000, and 2010)
-3. Non-missing education and marital status
+3. Married and never-married with non-missing education
 4. Non-missing spousal education when married
 
 Prints progress information for each filtering step.
@@ -160,9 +163,12 @@ function restrict_sample_men(df::DataFrame)
         FilterStep(
             "educ and marst",
             df -> filter(
-                row -> !ismissing(row.edu4) && !ismissing(row.marst), df
+                row -> !ismissing(row.edu4) &&
+                           !ismissing(row.marst) &&
+                           (row.marst == "married" || row.marst == "never-married"),
+                df
             ),
-            "Missing respondent's education or marital status"
+            "Missing respondent's education or marital status not married/never-married"
         ),
         FilterStep(
             "edu_sp",

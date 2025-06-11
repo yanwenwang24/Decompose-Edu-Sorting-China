@@ -140,7 +140,7 @@ edu_comp_plt <- edu_comp_pooled_plt / edu_comp_by_urban_plt
 ggsave(
   "outputs/graphs/main/edu_comp.png",
   edu_comp_plt,
-  width = 8,
+  width = 9,
   height = 12,
   dpi = 300
 )

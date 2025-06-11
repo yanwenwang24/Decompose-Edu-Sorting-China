@@ -106,7 +106,7 @@ decomp_plt <- decomp_pooled_plt / decomp_by_urban_plt
 ggsave(
   "outputs/graphs/main/decomp.png",
   decomp_plt,
-  width = 8,
+  width = 9,
   height = 12,
   dpi = 300
 )

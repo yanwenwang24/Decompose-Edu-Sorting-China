@@ -58,8 +58,11 @@ odds_ratio_pooled_plt <- odds_ratio_pooled %>%
   geom_point() +
   geom_line() +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
-  scale_y_continuous(breaks = seq(-10, 10, by = 1)) +
+  geom_hline(
+    yintercept = 0,
+    linewidth = 1, linetype = "solid", color = "darkgrey"
+  ) +
+  scale_y_continuous(breaks = seq(-10, 10, by = 2)) +
   scale_color_manual(
     values = c(
       "Primary or less" = "#82cfff",
@@ -99,8 +102,11 @@ odds_ratio_by_urban_plt <- odds_ratio_by_urban %>%
   geom_point() +
   geom_line() +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
-  scale_y_continuous(breaks = seq(-10, 10, by = 1)) +
+  geom_hline(
+    yintercept = 0,
+    linewidth = 1, linetype = "solid", color = "darkgrey"
+  ) +
+  scale_y_continuous(breaks = seq(-10, 10, by = 2)) +
   scale_color_manual(
     values = c(
       "Primary or less" = "#82cfff",

@@ -1,6 +1,6 @@
 # Data and output directories
 data/
-outputs/
+outputs/tables/
 
 # Mac OS
 .DS_Store

@@ -61,6 +61,18 @@ census_2000 = @chain census_2000 begin
     @transform(:age = ifelse.(:age .== 999, missing, :age))
     @transform(:birthy = :year - :age)
     @transform(:marst = get.(Ref(marst_dict), :marst, missing))
+    @transform(
+        :marstd = recode(
+            :cn2000a_marst,
+            1 => "never-married",
+            2 => "first marriage",
+            3 => "remarried",
+            4 => "divorced",
+            5 => "widowed",
+            9 => missing,
+            missing => missing
+        )
+    )
     @transform(:maryr = ifelse.(:marryr .>= 2020, missing, :marryr))
 end
 
@@ -90,7 +102,7 @@ cohort_mar_stats = @chain census_2000 begin
     )
 end
 
-leftjoin!(census_2000, cohort_mar_stats, on = [:female, :cohort])
+leftjoin!(census_2000, cohort_mar_stats, on=[:female, :cohort])
 
 census_2000 = @chain census_2000 begin
     @transform(:peak_mar_yr = coalesce.(:maryr, :median_maryr))
@@ -199,6 +211,7 @@ select!(
     :age,
     :birthy,
     :marst,
+    :marstd,
     :maryr,
     :marurban,
     :hukou,
@@ -220,6 +233,8 @@ df = @select(
     :age,
     :birthy,
     :hukou,
+    :marst,
+    :marstd,
     :maryr,
     :marurban,
     :edu7,
@@ -242,6 +257,8 @@ sp_df = leftjoin(
     :age_sp,
     :birthy_sp,
     :hukou_sp,
+    :marst_sp,
+    :marstd_sp,
     :maryr_sp,
     :marurban_sp,
     :edu7_sp,
@@ -262,6 +279,10 @@ leftjoin!(census_2000, sp_df, on=[:hhid, :pernum])
     :birthy_f = ifelse.(:female .== 0, :birthy_sp, :birthy),
     :hukou_m = ifelse.(:female .== 0, :hukou, :hukou_sp),
     :hukou_f = ifelse.(:female .== 0, :hukou_sp, :hukou),
+    :marst_m = ifelse.(:female .== 0, :marst, :marst_sp),
+    :marst_f = ifelse.(:female .== 0, :marst_sp, :marst),
+    :marstd_m = ifelse.(:female .== 0, :marstd, :marstd_sp),
+    :marstd_f = ifelse.(:female .== 0, :marstd_sp, :marstd),
     :maryr_m = ifelse.(:female .== 0, :maryr, :maryr_sp),
     :maryr_f = ifelse.(:female .== 0, :maryr_sp, :maryr),
     :marurban_m = ifelse.(:female .== 0, :marurban, :marurban_sp),

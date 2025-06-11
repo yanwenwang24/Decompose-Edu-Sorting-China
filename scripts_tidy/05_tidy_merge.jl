@@ -202,25 +202,6 @@ census[!, :heter4] = heter4
 census[!, :hyper4] = hyper4
 census[!, :hypo4] = hypo4
 
-# 3 First marriage --------------------------------------------------------
-
-first_marriage = Vector{Union{Int,Missing}}(undef, nrow(census))
-
-for i in 1:nrow(census)
-    m = census.maryr_m[i]
-    f = census.maryr_f[i]
-
-    if ismissing(m) || ismissing(f)
-        first_marriage[i] = missing
-    elseif m == f
-        first_marriage[i] = 1
-    elseif m != f
-        first_marriage[i] = 0
-    end
-end
-
-census[!, :first_marriage] = first_marriage
-
 # 4 Save ------------------------------------------------------------------
 
 write_parquet("data/processed/census.parquet", census)

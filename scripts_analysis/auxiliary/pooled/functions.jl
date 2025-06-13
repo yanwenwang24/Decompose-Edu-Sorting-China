@@ -43,8 +43,8 @@ Apply a series of filtering steps to restrict the sample for women based on pred
 Applies sequential filters for:
 1. Gender (female only)
 2. Age (27-36 for 1982, 25-34 for 1990, 2000, and 2010)
-3. Married and never-married with non-missing education
-4. Non-missing spousal education when married
+3. Marital status (married or never-married)
+4. Non-missing education (respondent and spouse if married)
 
 Prints progress information for each filtering step.
 """
@@ -69,24 +69,24 @@ function restrict_sample_women(df::DataFrame)
                         row.year == 2000 && !ismissing(row.age) && 25 <= row.age <= 34 ||
                         row.year == 2010 && !ismissing(row.age) && 25 <= row.age <= 34
                 end, df),
-            "Filter by age based on year: 1982 (27-36), 1990/2000/2010 (25-34)"
+            "Filter by age: 1982 (27-36), 1990/2000/2010 (25-34)"
         ),
         FilterStep(
-            "educ and marst",
+            "marital status",
             df -> filter(
-                row -> !ismissing(row.edu5) &&
-                           !ismissing(row.marst) &&
-                           (row.marst == "married" || row.marst == "never-married"),
+                row -> !ismissing(row.marst) &&
+                    (row.marst == "married" || row.marst == "never-married"),
                 df
             ),
-            "Missing respondent's education or marital status not married/never-married"
+            "Filter by marital status: married or never-married"
         ),
         FilterStep(
-            "edu_sp",
+            "education",
             df -> filter(
-                row -> !(row.marst == "married" && ismissing(row.edu5_sp)), df
+                row -> !ismissing(row.edu5) && !(row.marst == "married" && ismissing(row.edu5_sp)),
+                df
             ),
-            "Missing spousal education when married"
+            "Filter by education: non-missing own and spousal education"
         )
     ]
 
@@ -132,8 +132,8 @@ Apply a series of filtering steps to restrict the sample for men based on predef
 Applies sequential filters for:
 1. Gender (male only)
 2. Age (29-38 for 1982, 27-36 for 1990, 2000, and 2010)
-3. Married and never-married with non-missing education
-4. Non-missing spousal education when married
+3. Marital status (married or never-married)
+4. Non-missing education (respondent and spouse if married)
 
 Prints progress information for each filtering step.
 """
@@ -148,7 +148,7 @@ function restrict_sample_men(df::DataFrame)
             df -> filter(
                 row -> !ismissing(row.female) && row.female == 0, df
             ),
-            "Filter by gender (male only)"
+            "Filter by gender (female only)"
         ),
         FilterStep(
             "age",
@@ -158,24 +158,24 @@ function restrict_sample_men(df::DataFrame)
                         row.year == 2000 && !ismissing(row.age) && 27 <= row.age <= 36 ||
                         row.year == 2010 && !ismissing(row.age) && 27 <= row.age <= 36
                 end, df),
-            "Filter by age based on year: 1982 (29-38), 1990/2000/2010 (27-36)"
+            "Filter by age: 1982 (29-38), 1990/2000/2010 (27-36)"
         ),
         FilterStep(
-            "educ and marst",
+            "marital status",
             df -> filter(
-                row -> !ismissing(row.edu5) &&
-                           !ismissing(row.marst) &&
-                           (row.marst == "married" || row.marst == "never-married"),
+                row -> !ismissing(row.marst) &&
+                    (row.marst == "married" || row.marst == "never-married"),
                 df
             ),
-            "Missing respondent's education or marital status not married/never-married"
+            "Filter by marital status: married or never-married"
         ),
         FilterStep(
-            "edu_sp",
+            "education",
             df -> filter(
-                row -> !(row.marst == "married" && ismissing(row.edu5_sp)), df
+                row -> !ismissing(row.edu5) && !(row.marst == "married" && ismissing(row.edu5_sp)),
+                df
             ),
-            "Missing spousal education when married"
+            "Filter by education: non-missing own and spousal education"
         )
     ]
 

@@ -43,10 +43,10 @@ Apply a series of filtering steps to restrict the sample for women based on pred
 Applies sequential filters for:
 1. Gender (female only)
 2. Age (25-34 for 2000 and 2010)
-3. Non-missing education, marital status, and urban status at marriage
-4. Non-missing spousal education when married
-5. Non-missing spousal urban status when married
-6. Matched urban status at marriage (self and spouse) when married
+3. Marital status (married or never-married)
+4. Non-missing education (respondent and spouse if married)
+5. Non-missing urban status (respondent and spouse if married)
+6. Urban status at marriage matches between self and spouse when married
 7. First marriage for both spouses
 
 Prints progress information for each filtering step.
@@ -74,46 +74,32 @@ function restrict_sample_women(df::DataFrame)
             "Filter by age based on year: 2000/2010 (25-34)"
         ),
         FilterStep(
-            "educ, marital status, and urban status at marriage",
+            "marital status",
             df -> filter(
-                row -> !ismissing(row.edu5) &&
-                           !ismissing(row.marurban) &&
-                           !ismissing(row.marst) &&
-                           (row.marst == "married" || row.marst == "never-married"),
+                row -> !ismissing(row.marst) &&
+                    (row.marst == "married" || row.marst == "never-married"),
                 df
             ),
-            "Missing respondent's education or marital status not married/never-married"
+            "Filter by marital status: married or never-married"
         ),
         FilterStep(
-            "edu_sp",
+            "education",
             df -> filter(
-                row -> !(
-                    row.marst == "married" && (
-                    # Missing spousal education
-                        ismissing(row.edu4_sp)
-                    )
-                ),
+                row -> !ismissing(row.edu4) && !(row.marst == "married" && ismissing(row.edu4_sp)),
                 df
             ),
-            "Missing spousal education for the married"
+            "Filter by education: non-missing own and spousal education"
         ),
         FilterStep(
-            "marurban",
+            "urban status",
             df -> filter(
-                row -> !(
-                    row.marst == "married" && (
-                        # Missing own marurban
-                        ismissing(row.marurban) ||
-                        # Missing spouse's marurban
-                        ismissing(row.marurban_sp)
-                    )
-                ),
+                row -> !ismissing(row.marurban) && !(row.marst == "married" && ismissing(row.marurban_sp)),
                 df
             ),
-            "Missing urban status for the married"
+            "Filter by urban status: non-missing own and spousal urban status"
         ),
         FilterStep(
-            "marurban_match",
+            "matched urban status",
             df -> filter(
                 row -> !(
                     row.marst == "married" && (
@@ -123,10 +109,10 @@ function restrict_sample_women(df::DataFrame)
                 ),
                 df
             ),
-            "Marurban doesn't match spouse's for the married"
+            "Filter by matched urban status: self and spouse when married"
         ),
         FilterStep(
-            "First marriage",
+            "first marriage",
             df -> filter(
                 row -> !(
                     (row.year == 2010 && row.marst == "married" && (
@@ -138,7 +124,7 @@ function restrict_sample_women(df::DataFrame)
                 ),
                 df
             ),
-            "One of the spouse not in first marriage"
+            "Filter by first marriage"
         )
     ]
 
@@ -184,10 +170,10 @@ Apply a series of filtering steps to restrict the sample for men based on predef
 Applies sequential filters for:
 1. Gender (male only)
 2. Age (27-36 for 2000 and 2010)
-3. Non-missing education, marital status, and urban status at marriage
-4. Non-missing spousal education when married
-5. Non-missing spousal urban status when married
-6. Matched urban status at marriage (self and spouse) when married
+3. Marital status (married or never-married)
+4. Non-missing education (respondent and spouse if married)
+5. Non-missing urban status (respondent and spouse if married)
+6. Urban status at marriage matches between self and spouse when married
 7. First marriage for both spouses
 
 Prints progress information for each filtering step.
@@ -215,46 +201,32 @@ function restrict_sample_men(df::DataFrame)
             "Filter by age based on year: 2000/2010 (27-36)"
         ),
         FilterStep(
-            "educ, marital status, and urban status at marriage",
+            "marital status",
             df -> filter(
-                row -> !ismissing(row.edu5) &&
-                           !ismissing(row.marurban) &&
-                           !ismissing(row.marst) &&
-                           (row.marst == "married" || row.marst == "never-married"),
+                row -> !ismissing(row.marst) &&
+                    (row.marst == "married" || row.marst == "never-married"),
                 df
             ),
-            "Missing respondent's education or marital status not married/never-married"
+            "Filter by marital status: married or never-married"
         ),
         FilterStep(
-            "edu_sp",
+            "education",
             df -> filter(
-                row -> !(
-                    row.marst == "married" && (
-                    # Missing spousal education
-                        ismissing(row.edu4_sp)
-                    )
-                ),
+                row -> !ismissing(row.edu4) && !(row.marst == "married" && ismissing(row.edu4_sp)),
                 df
             ),
-            "Missing spousal education for the married"
+            "Filter by education: non-missing own and spousal education"
         ),
         FilterStep(
-            "marurban",
+            "urban status",
             df -> filter(
-                row -> !(
-                    row.marst == "married" && (
-                        # Missing own marurban
-                        ismissing(row.marurban) ||
-                        # Missing spouse's marurban
-                        ismissing(row.marurban_sp)
-                    )
-                ),
+                row -> !ismissing(row.marurban) && !(row.marst == "married" && ismissing(row.marurban_sp)),
                 df
             ),
-            "Missing urban status for the married"
+            "Filter by urban status: non-missing own and spousal urban status"
         ),
         FilterStep(
-            "marurban_match",
+            "matched urban status",
             df -> filter(
                 row -> !(
                     row.marst == "married" && (
@@ -264,10 +236,10 @@ function restrict_sample_men(df::DataFrame)
                 ),
                 df
             ),
-            "Marurban doesn't match spouse's for the married"
+            "Filter by matched urban status: self and spouse when married"
         ),
         FilterStep(
-            "First marriage",
+            "first marriage",
             df -> filter(
                 row -> !(
                     (row.year == 2010 && row.marst == "married" && (
@@ -279,7 +251,7 @@ function restrict_sample_men(df::DataFrame)
                 ),
                 df
             ),
-            "One of the spouse not in first marriage"
+            "Filter by first marriage"
         )
     ]
 

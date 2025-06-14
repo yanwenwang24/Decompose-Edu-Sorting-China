@@ -597,10 +597,12 @@ function create_comparison_analysis(df::DataFrame, group_var::Symbol; n_bootstra
     # Perform comparisons
     for group in groups
         # Perform decomposition with bootstrap
+        df_comparison = filter(row -> row[group_var] in (base_group, group), df)
+
         bootstrap_results = bootstrap_decomposition(
             component_sets[base_group],
             component_sets[group],
-            df,
+            df_comparison,
             n_bootstrap=n_bootstrap
         )
 

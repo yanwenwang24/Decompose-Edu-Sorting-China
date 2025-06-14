@@ -84,6 +84,7 @@ trends_by_urban_plt <- trends_by_urban %>%
   facet_grid(~urban) +
   theme(
     axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
     legend.position = "right"
   )
 

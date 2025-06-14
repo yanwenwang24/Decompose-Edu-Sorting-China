@@ -51,7 +51,7 @@ trends_pooled_plt <- trends_pooled %>%
   ) +
   labs(
     title = "",
-    x = "Cohort",
+    x = "",
     y = ""
   ) +
   facet_grid(~urban) +
@@ -80,7 +80,7 @@ trends_by_urban_plt <- trends_by_urban %>%
   ) +
   labs(
     title = "",
-    x = "Cohort",
+    x = "",
     y = "",
   ) +
   facet_grid(~urban) +

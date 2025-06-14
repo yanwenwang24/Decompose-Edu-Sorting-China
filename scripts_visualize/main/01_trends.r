@@ -39,7 +39,7 @@ trends_pooled_plt <- trends_pooled %>%
   ) +
   scale_y_continuous(
     labels = scales::percent,
-    limits = c(0, 0.82),       # Set a common y-axis range
+    limits = c(0, 0.82), # Set a common y-axis range
     breaks = seq(0, 0.8, by = 0.2)
   ) +
   scale_color_manual(
@@ -68,7 +68,7 @@ trends_by_urban_plt <- trends_by_urban %>%
   ) +
   scale_y_continuous(
     labels = scales::percent,
-    limits = c(0, 0.82),       # Set a common y-axis range
+    limits = c(0, 0.82), # Set a common y-axis range
     breaks = seq(0, 0.8, by = 0.2)
   ) +
   scale_color_manual(
@@ -82,7 +82,10 @@ trends_by_urban_plt <- trends_by_urban %>%
     y = "",
   ) +
   facet_grid(~urban) +
-  theme(legend.position = "right")
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "right"
+  )
 
 trends_plt <- trends_pooled_plt + trends_by_urban_plt
 

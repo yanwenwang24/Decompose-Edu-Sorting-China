@@ -70,7 +70,7 @@ gradient_pooled_plt <- ggplot(
   ) +
   labs(
     x = "",
-    y = "Odds of being unmarried"
+    y = "Odds of being never-married"
   ) +
   facet_grid(~Gender) +
   theme(
@@ -92,7 +92,7 @@ gradient_by_urban_plt <- ggplot(
   ) +
   labs(
     x = "",
-    y = "Odds of being unmarried"
+    y = "Odds of being never-married"
   ) +
   facet_grid(~ urban + Gender) +
   theme(

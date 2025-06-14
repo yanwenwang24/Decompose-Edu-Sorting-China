@@ -21,6 +21,38 @@ decomp_by_urban <- read_parquet(
   "outputs/tables/auxiliary/urban-rural/decomp.parquet"
 )
 
+# Print output
+decomp_pooled %>%
+  mutate(
+    p_value = 2 * pnorm(-abs(estimate / se))
+  ) %>%
+  mutate(
+    sign = case_when(
+      p_value < 0.001 ~ "***",
+      p_value < 0.01 ~ "**",
+      p_value < 0.05 ~ "*",
+      TRUE ~ "ns"
+    )
+  ) %>%
+  select(group, pattern, component, estimate, se, sign) %>%
+  print(n = Inf)
+
+decomp_by_urban %>%
+  filter(group != base_group) %>%
+  mutate(
+    p_value = 2 * pnorm(-abs(estimate / se))
+  ) %>%
+  mutate(
+    sign = case_when(
+      p_value < 0.001 ~ "***",
+      p_value < 0.01 ~ "**",
+      p_value < 0.05 ~ "*",
+      TRUE ~ "ns"
+    )
+  ) %>%
+  select(cohort, group, pattern, component, estimate, se, sign) %>%
+  print(n = Inf)
+
 # Recode
 decomp_pooled <- decomp_pooled %>%
   filter(group != base_group) %>%

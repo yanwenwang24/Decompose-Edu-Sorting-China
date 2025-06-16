@@ -151,8 +151,8 @@ y_range_data <- all_component_bars %>%
     max_y = max(c(start, end, text_y_pos), na.rm = TRUE)
   ) %>%
   mutate(
-    padded_min = min_y - 0.005,
-    padded_max = max_y + 0.005
+    padded_min = min_y - 0.001,
+    padded_max = max_y + 0.001
   )
 
 # Reshape this into a 'dummy' dataframe for geom_blank()

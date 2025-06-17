@@ -85,7 +85,7 @@ function restrict_sample_women(df::DataFrame)
         FilterStep(
             "education",
             df -> filter(
-                row -> !ismissing(row.edu4) && !(row.marst == "married" && ismissing(row.edu4_sp)),
+                row -> !ismissing(row.edu5) && !(row.marst == "married" && ismissing(row.edu5_sp)),
                 df
             ),
             "Filter by education: non-missing own and spousal education"
@@ -212,7 +212,7 @@ function restrict_sample_men(df::DataFrame)
         FilterStep(
             "education",
             df -> filter(
-                row -> !ismissing(row.edu4) && !(row.marst == "married" && ismissing(row.edu4_sp)),
+                row -> !ismissing(row.edu5) && !(row.marst == "married" && ismissing(row.edu5_sp)),
                 df
             ),
             "Filter by education: non-missing own and spousal education"
@@ -281,7 +281,6 @@ function restrict_sample_men(df::DataFrame)
 
     return current_sample
 end
-
 """
     assign_cohort(year)
 
@@ -316,8 +315,8 @@ Returns `missing` values if input data is empty or invalid.
 """
 function calculate_expected_proportion(group)
     # Remove missing values and count frequencies
-    f_counts = countmap(skipmissing(group.edu4_f))
-    m_counts = countmap(skipmissing(group.edu4_m))
+    f_counts = countmap(skipmissing(group.edu5_f))
+    m_counts = countmap(skipmissing(group.edu5_m))
 
     # Check if data is valid
     if isempty(f_counts) || isempty(m_counts)
@@ -372,38 +371,56 @@ Extract all three components from a single group's data.
 Returns a ComponentSet containing margins, weights, and pattern components.
 """
 function extract_components(df::DataFrame)
-    max_edu = maximum(df.edu4_f) - 1
+    max_edu = maximum(df.edu5_f) - 1
     full_matrix = zeros(Float64, max_edu + 1, max_edu + 1)
 
     # Fill marriage table and margins
     for row in eachrow(df)
-        if row.edu4_f ≤ max_edu && row.edu4_m ≤ max_edu
-            full_matrix[row.edu4_f, row.edu4_m] = row.n
-        elseif row.edu4_m == max_edu + 1 && row.edu4_f ≤ max_edu
-            full_matrix[row.edu4_f, end] = row.n
-        elseif row.edu4_f == max_edu + 1 && row.edu4_m ≤ max_edu
-            full_matrix[end, row.edu4_m] = row.n
+        val = coalesce(row.n, 0.0)
+
+        if row.edu5_f ≤ max_edu && row.edu5_m ≤ max_edu
+            full_matrix[row.edu5_f, row.edu5_m] = val
+        elseif row.edu5_m == max_edu + 1 && row.edu5_f ≤ max_edu
+            full_matrix[row.edu5_f, end] = val
+        elseif row.edu5_f == max_edu + 1 && row.edu5_m ≤ max_edu
+            full_matrix[end, row.edu5_m] = val
         end
     end
 
     # Standardize components separately
     marriage_sum = sum(@view full_matrix[1:max_edu, 1:max_edu])
 
+    # Handle potential zero sums in margins to avoid division by zero -> NaN
+    f_margin_sum = sum(full_matrix[1:max_edu, end])
+    m_margin_sum = sum(full_matrix[end, 1:max_edu])
+
     # Create margins
-    f_totals = full_matrix[1:max_edu, end] ./ sum(full_matrix[1:max_edu, end])
-    m_totals = full_matrix[end, 1:max_edu] ./ sum(full_matrix[end, 1:max_edu])
+    f_totals = f_margin_sum > 0 ? (full_matrix[1:max_edu, end] ./ f_margin_sum) : zeros(Float64, max_edu)
+    m_totals = m_margin_sum > 0 ? (full_matrix[end, 1:max_edu] ./ m_margin_sum) : zeros(Float64, max_edu)
     margins = (f_totals, m_totals)
 
     # Calculate marriage gradients
     f_married = vec(sum(full_matrix[1:max_edu, 1:max_edu], dims=2))
     m_married = vec(sum(full_matrix[1:max_edu, 1:max_edu], dims=1))
-    weights = (f_married ./ full_matrix[1:max_edu, end]) .*
-              (m_married ./ full_matrix[end, 1:max_edu])'
-    weights ./= sum(weights)
+
+    # Protect against division by zero if an entire education level has no unmarried people
+    unmarried_f = full_matrix[1:max_edu, end]
+    unmarried_m = full_matrix[end, 1:max_edu]
+
+    f_ratio = [unmarried_f[i] > 0 ? f_married[i] / unmarried_f[i] : 0.0 for i in 1:max_edu]
+    m_ratio = [unmarried_m[i] > 0 ? m_married[i] / unmarried_m[i] : 0.0 for i in 1:max_edu]
+
+    weights = (f_ratio .* m_ratio')
+    weights_sum = sum(weights)
+    weights = weights_sum > 0 ? weights ./ weights_sum : weights # Avoid NaN if sum is 0
 
     # Calculate assortative mating pattern using odds ratios
+    pseudo_count = 1e-6
+    marriage_table = full_matrix[1:max_edu, 1:max_edu] ./ marriage_sum .+ pseudo_count
+
+    marriage_table = marriage_table ./ sum(marriage_table)
+
     pattern = ones(max_edu, max_edu)
-    marriage_table = full_matrix[1:max_edu, 1:max_edu] ./ marriage_sum
     for r in 2:max_edu, c in 2:max_edu
         pattern[r, c] = (marriage_table[r, c] / marriage_table[r, 1]) *
                         (marriage_table[1, 1] / marriage_table[1, c])
@@ -574,7 +591,7 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
 
     # Identify the grouping variable and values
     # We assume the first non-numeric, non-n column is the grouping variable
-    group_col = names(df)[findfirst(col -> col ∉ ["edu4_f", "edu4_m", "n", "n_unrounded"], names(df))]
+    group_col = names(df)[findfirst(col -> col ∉ ["edu5_f", "edu5_m", "n", "n_unrounded"], names(df))]
     group_vals = unique(df[:, group_col])
 
     # Remove rows with missing values and prepare for bootstrap
@@ -674,7 +691,7 @@ function create_comparison_analysis(df::DataFrame, group_var::Symbol; n_bootstra
     for group in groups
         # Perform decomposition with bootstrap
         df_comparison = filter(row -> row[group_var] in (base_group, group), df)
-        
+
         bootstrap_results = bootstrap_decomposition(
             component_sets[base_group],
             component_sets[group],

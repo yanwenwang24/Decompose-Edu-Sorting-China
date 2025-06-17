@@ -14,9 +14,9 @@
 
 # 1 Load data -------------------------------------------------------------
 
-trends_pooled <- read_parquet("outputs/tables/auxiliary/pooled/trends.parquet")
+trends_pooled <- read_parquet("outputs/tables/pooled/trends.parquet")
 trends_by_urban <- read_parquet(
-  "outputs/tables/auxiliary/urban-rural/trends.parquet"
+  "outputs/tables/urban-rural/trends.parquet"
 )
 
 # Recode urban
@@ -94,7 +94,7 @@ trends_plt <- trends_pooled_plt + trends_by_urban_plt
 
 # Save the plot
 ggsave(
-  "outputs/graphs/auxiliary/trends.png",
+  "outputs/graphs/trends.png",
   trends_plt,
   width = 10,
   height = 10,

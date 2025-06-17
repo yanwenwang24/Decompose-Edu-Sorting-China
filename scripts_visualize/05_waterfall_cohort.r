@@ -14,7 +14,7 @@
 
 # 1 Load data -------------------------------------------------------------
 
-decomp_pooled <- read_parquet("outputs/tables/auxiliary/pooled/decomp.parquet")
+decomp_pooled <- read_parquet("outputs/tables/pooled/decomp.parquet")
 
 # Print output
 decomp_pooled %>%
@@ -245,7 +245,7 @@ waterfall_integrated_plt <- ggplot() +
   )
 
 ggsave(
-  "outputs/graphs/auxiliary/waterfall_cohort.png",
+  "outputs/graphs/waterfall_cohort.png",
   waterfall_integrated_plt,
   width = 9.5,
   height = 12,

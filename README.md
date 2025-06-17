@@ -23,4 +23,3 @@ After installing Julia, R, and relevant packages, follow these steps to replicat
 3. Decompose differences in educational sorting outcomes across cohorts using scripts in the [scripts_analysis/pooled](./scripts_analysis/pooled/) directory.
 4. Decompose differences in educational sorting outcomes between urban and rural areas by cohort using scripts in the [scripts_analysis/urban-rural](./scripts_analysis/urban-rural/) directory.
 5. Visualize the results using scripts in the [scripts_visualize](./scripts_visualize/) directory.
-6. Auxiliary analyses using five-level education classification are in the [scripts_analysis/auxiliary](./scripts_analysis/auxiliary/) directory.

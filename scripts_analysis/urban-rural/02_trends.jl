@@ -18,9 +18,9 @@
 observed_pattern = @chain sample_women_married begin
     @groupby(:urban, :birthy)
     @combine(
-        :Homogamy = mean(:homo4),
-        :Hypergamy = mean(:hyper4),
-        :Hypogamy = mean(:hypo4)
+        :Homogamy = mean(:homo5),
+        :Hypergamy = mean(:hyper5),
+        :Hypogamy = mean(:hypo5)
     )
 end
 

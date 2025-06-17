@@ -83,7 +83,7 @@ function restrict_sample_women(df::DataFrame)
         FilterStep(
             "education",
             df -> filter(
-                row -> !ismissing(row.edu4) && !(row.marst == "married" && ismissing(row.edu4_sp)),
+                row -> !ismissing(row.edu5) && !(row.marst == "married" && ismissing(row.edu5_sp)),
                 df
             ),
             "Filter by education: non-missing own and spousal education"
@@ -172,7 +172,7 @@ function restrict_sample_men(df::DataFrame)
         FilterStep(
             "education",
             df -> filter(
-                row -> !ismissing(row.edu4) && !(row.marst == "married" && ismissing(row.edu4_sp)),
+                row -> !ismissing(row.edu5) && !(row.marst == "married" && ismissing(row.edu5_sp)),
                 df
             ),
             "Filter by education: non-missing own and spousal education"
@@ -240,8 +240,8 @@ Returns `missing` values if input data is empty or invalid.
 """
 function calculate_expected_proportion(group)
     # Remove missing values and count frequencies
-    f_counts = countmap(skipmissing(group.edu4_f))
-    m_counts = countmap(skipmissing(group.edu4_m))
+    f_counts = countmap(skipmissing(group.edu5_f))
+    m_counts = countmap(skipmissing(group.edu5_m))
 
     # Check if data is valid
     if isempty(f_counts) || isempty(m_counts)
@@ -296,17 +296,17 @@ Extract all three components from a single group's data.
 Returns a ComponentSet containing margins, weights, and pattern components.
 """
 function extract_components(df::DataFrame)
-    max_edu = maximum(df.edu4_f) - 1
+    max_edu = maximum(df.edu5_f) - 1
     full_matrix = zeros(Float64, max_edu + 1, max_edu + 1)
 
     # Fill marriage table and margins
     for row in eachrow(df)
-        if row.edu4_f ≤ max_edu && row.edu4_m ≤ max_edu
-            full_matrix[row.edu4_f, row.edu4_m] = row.n
-        elseif row.edu4_m == max_edu + 1 && row.edu4_f ≤ max_edu
-            full_matrix[row.edu4_f, end] = row.n
-        elseif row.edu4_f == max_edu + 1 && row.edu4_m ≤ max_edu
-            full_matrix[end, row.edu4_m] = row.n
+        if row.edu5_f ≤ max_edu && row.edu5_m ≤ max_edu
+            full_matrix[row.edu5_f, row.edu5_m] = row.n
+        elseif row.edu5_m == max_edu + 1 && row.edu5_f ≤ max_edu
+            full_matrix[row.edu5_f, end] = row.n
+        elseif row.edu5_f == max_edu + 1 && row.edu5_m ≤ max_edu
+            full_matrix[end, row.edu5_m] = row.n
         end
     end
 
@@ -498,7 +498,7 @@ function bootstrap_decomposition(comp1::ComponentSet, comp2::ComponentSet, df::D
 
     # Identify the grouping variable and values
     # We assume the first non-numeric, non-n column is the grouping variable
-    group_col = names(df)[findfirst(col -> col ∉ ["edu4_f", "edu4_m", "n", "n_unrounded"], names(df))]
+    group_col = names(df)[findfirst(col -> col ∉ ["edu5_f", "edu5_m", "n", "n_unrounded"], names(df))]
     group_vals = unique(df[:, group_col])
 
     # Remove rows with missing values and prepare for bootstrap
@@ -598,7 +598,7 @@ function create_comparison_analysis(df::DataFrame, group_var::Symbol; n_bootstra
     for group in groups
         # Perform decomposition with bootstrap
         df_comparison = filter(row -> row[group_var] in (base_group, group), df)
-        
+
         bootstrap_results = bootstrap_decomposition(
             component_sets[base_group],
             component_sets[group],

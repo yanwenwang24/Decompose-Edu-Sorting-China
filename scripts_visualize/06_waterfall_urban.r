@@ -14,7 +14,9 @@
 
 # 1 Load data -------------------------------------------------------------
 
-decomp_by_urban <- read_parquet("outputs/tables/urban-rural/decomp.parquet")
+decomp_by_urban <- read_parquet(
+  "outputs/tables/urban-rural/decomp.parquet"
+)
 
 # Print output
 decomp_by_urban %>%
@@ -202,7 +204,7 @@ waterfall_integrated_plt <- ggplot() +
   )
 
 ggsave(
-  "outputs/graphs/main/waterfall_urban.png",
+  "outputs/graphs/waterfall_urban.png",
   waterfall_integrated_plt,
   width = 9.5,
   height = 12,

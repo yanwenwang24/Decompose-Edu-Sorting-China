@@ -16,7 +16,7 @@
 
 # Ratio of unmarried to married
 women_ratio = combine(
-    groupby(sample_women, [:birthy, :edu4]),
+    groupby(sample_women, [:birthy, :edu5]),
     # Calculate married and unmarried counts
     :marst => (x -> sum(x .== "married")) => :married,
     :marst => (x -> sum(x .!= "married")) => :unmarried
@@ -30,7 +30,7 @@ women_ratio.Gender .= "Women"
 
 # Ratio of unmarried to married
 men_ratio = combine(
-    groupby(sample_men, [:birthy, :edu4]),
+    groupby(sample_men, [:birthy, :edu5]),
     # Calculate married and unmarried counts
     :marst => (x -> sum(x .== "married")) => :married,
     :marst => (x -> sum(x .!= "married")) => :unmarried

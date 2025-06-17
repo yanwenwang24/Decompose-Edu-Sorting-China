@@ -15,10 +15,10 @@
 # 1 Load data -------------------------------------------------------------
 
 gradient_pooled <- read_parquet(
-  "outputs/tables/auxiliary/pooled/gradients.parquet"
+  "outputs/tables/pooled/gradients.parquet"
 )
 gradient_by_urban <- read_parquet(
-  "outputs/tables/auxiliary/urban-rural/gradients.parquet"
+  "outputs/tables/urban-rural/gradients.parquet"
 )
 
 # Recode education and urban status
@@ -108,7 +108,7 @@ gradient_plt <- gradient_pooled_plt / gradient_by_urban_plt
 
 # Save the plot
 ggsave(
-  "outputs/graphs/auxiliary/gradient.png",
+  "outputs/graphs/gradient.png",
   gradient_plt,
   width = 9,
   height = 12,

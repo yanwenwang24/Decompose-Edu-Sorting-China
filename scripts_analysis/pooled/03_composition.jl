@@ -14,7 +14,7 @@
 
 # 1 Women -----------------------------------------------------------------
 
-prop_women = prop(freqtable(sample_women, :cohort, :edu4), margins=1)
+prop_women = prop(freqtable(sample_women, :cohort, :edu5), margins=1)
 
 # Convert named matrix to DataFrame
 data = parent(prop_women)
@@ -37,7 +37,7 @@ edu_comp_women_long.Gender .= "Women"
 
 # 2 Men -------------------------------------------------------------------
 
-prop_men = prop(freqtable(sample_men, :cohort, :edu4), margins=1)
+prop_men = prop(freqtable(sample_men, :cohort, :edu5), margins=1)
 
 # Convert named matrix to DataFrame
 data = parent(prop_men)

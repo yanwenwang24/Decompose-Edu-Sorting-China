@@ -14,7 +14,9 @@
 
 # 1 Load data -------------------------------------------------------------
 
-odds_ratio_pooled <- read_parquet("outputs/tables/pooled/odds_ratio.parquet")
+odds_ratio_pooled <- read_parquet(
+  "outputs/tables/pooled/odds_ratio.parquet"
+)
 odds_ratio_by_urban <- read_parquet(
   "outputs/tables/urban-rural/odds_ratio.parquet"
 )
@@ -27,6 +29,7 @@ odds_ratio_pooled <- odds_ratio_pooled %>%
         "Primary or less",
         "Middle",
         "Secondary",
+        "Some college",
         "College or above",
         "Aggregated"
       )
@@ -40,6 +43,7 @@ odds_ratio_by_urban <- odds_ratio_by_urban %>%
         "Primary or less",
         "Middle",
         "Secondary",
+        "Some college",
         "College or above",
         "Aggregated"
       )
@@ -65,10 +69,11 @@ odds_ratio_pooled_plt <- odds_ratio_pooled %>%
   scale_y_continuous(breaks = seq(-10, 10, by = 2)) +
   scale_color_manual(
     values = c(
-      "Primary or less" = "#82cfff",
-      "Middle" = "#1192e8",
-      "Secondary" = "#00539a",
-      "College or above" = "#012749",
+      "Primary or less" = "#bae6ff",
+      "Middle" = "#33b1ff",
+      "Secondary" = "#0072c3",
+      "Some college" = "#003a6d",
+      "College or above" = "#1c0f30",
       "Aggregated" = "grey"
     ),
     name = "Education"
@@ -78,6 +83,7 @@ odds_ratio_pooled_plt <- odds_ratio_pooled %>%
       "Primary or less" = "solid",
       "Middle" = "solid",
       "Secondary" = "solid",
+      "Some college" = "solid",
       "College or above" = "solid",
       "Aggregated" = "dashed"
     ),
@@ -109,10 +115,11 @@ odds_ratio_by_urban_plt <- odds_ratio_by_urban %>%
   scale_y_continuous(breaks = seq(-10, 10, by = 2)) +
   scale_color_manual(
     values = c(
-      "Primary or less" = "#82cfff",
-      "Middle" = "#1192e8",
-      "Secondary" = "#00539a",
-      "College or above" = "#012749",
+      "Primary or less" = "#bae6ff",
+      "Middle" = "#33b1ff",
+      "Secondary" = "#0072c3",
+      "Some college" = "#003a6d",
+      "College or above" = "#1c0f30",
       "Aggregated" = "grey"
     ),
     name = "Education"
@@ -122,6 +129,7 @@ odds_ratio_by_urban_plt <- odds_ratio_by_urban %>%
       "Primary or less" = "solid",
       "Middle" = "solid",
       "Secondary" = "solid",
+      "Some college" = "solid",
       "College or above" = "solid",
       "Aggregated" = "dashed"
     ),
@@ -141,7 +149,7 @@ odds_ratio_plt <- odds_ratio_pooled_plt / odds_ratio_by_urban_plt
 
 # Save the plot
 ggsave(
-  "outputs/graphs/main/odds_ratio.png",
+  "outputs/graphs/odds_ratio.png",
   odds_ratio_plt,
   width = 9,
   height = 12,

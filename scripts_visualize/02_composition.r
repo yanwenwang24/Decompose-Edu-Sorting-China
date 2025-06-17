@@ -14,8 +14,12 @@
 
 # 1 Load data -------------------------------------------------------------
 
-edu_comp_pooled <- read_parquet("outputs/tables/pooled/edu_comp.parquet")
-edu_comp_by_urban <- read_parquet("outputs/tables/urban-rural/edu_comp.parquet")
+edu_comp_pooled <- read_parquet(
+  "outputs/tables/pooled/edu_comp.parquet"
+)
+edu_comp_by_urban <- read_parquet(
+  "outputs/tables/urban-rural/edu_comp.parquet"
+)
 
 # Recode education and urban status
 edu_comp_pooled <- edu_comp_pooled %>%
@@ -24,12 +28,13 @@ edu_comp_pooled <- edu_comp_pooled %>%
       Education == 1 ~ "Primary or less",
       Education == 2 ~ "Middle",
       Education == 3 ~ "Secondary",
-      Education == 4 ~ "College or higher"
+      Education == 4 ~ "Some college",
+      Education == 5 ~ "College or above"
     ),
     Education = factor(Education,
       levels = c(
         "Primary or less", "Middle",
-        "Secondary", "College or higher"
+        "Secondary", "Some college", "College or above"
       )
     )
   ) %>%
@@ -44,12 +49,13 @@ edu_comp_by_urban <- edu_comp_by_urban %>%
       Education == 1 ~ "Primary or less",
       Education == 2 ~ "Middle",
       Education == 3 ~ "Secondary",
-      Education == 4 ~ "College or higher"
+      Education == 4 ~ "Some college",
+      Education == 5 ~ "College or above"
     ),
     Education = factor(Education,
       levels = c(
         "Primary or less", "Middle",
-        "Secondary", "College or higher"
+        "Secondary", "Some college", "College or above"
       )
     )
   ) %>%
@@ -72,7 +78,7 @@ edu_comp_pooled_plt <- ggplot(
     aes(
       label = ifelse(value > 0.025, label, ""),
       # Conditionally map color based on Education level
-      color = Education %in% c("Secondary", "College or higher")
+      color = Education %in% c("Secondary", "Some college", "College or above"),
     ),
     position = position_fill(vjust = 0.5),
     size = 3,
@@ -80,7 +86,7 @@ edu_comp_pooled_plt <- ggplot(
   ) +
   scale_fill_manual(
     values = c(
-      "#82cfff", "#1192e8", "#00539a", "#012749"
+      "#bae6ff", "#33b1ff", "#0072c3", "#003a6d", "#1c0f30"
     )
   ) +
   scale_color_manual(
@@ -107,7 +113,7 @@ edu_comp_by_urban_plt <- edu_comp_by_urban %>%
     aes(
       label = ifelse(value > 0.025, label, ""),
       # Conditionally map color based on Education level
-      color = Education %in% c("Secondary", "College or higher")
+      color = Education %in% c("Secondary", "Some college", "College or above"),
     ),
     position = position_fill(vjust = 0.5),
     size = 3,
@@ -120,7 +126,7 @@ edu_comp_by_urban_plt <- edu_comp_by_urban %>%
   ) +
   scale_fill_manual(
     values = c(
-      "#82cfff", "#1192e8", "#00539a", "#012749"
+      "#bae6ff", "#33b1ff", "#0072c3", "#003a6d", "#1c0f30"
     )
   ) +
   scale_color_manual(
@@ -138,7 +144,7 @@ edu_comp_plt <- edu_comp_pooled_plt / edu_comp_by_urban_plt
 
 # Save the plot
 ggsave(
-  "outputs/graphs/main/edu_comp.png",
+  "outputs/graphs/edu_comp.png",
   edu_comp_plt,
   width = 9,
   height = 12,
